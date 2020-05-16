@@ -33,7 +33,7 @@ def bordered(text):
 def displayNotes():
     fullNotes = keep.all()
     rawNoteText = []
-    
+
     for index in range(len(fullNotes)):
         notelist = fullNotes[index].text.split('\n')
         notelist[:] = [x for x in notelist if "☑" not in x]
@@ -70,11 +70,11 @@ def login():
     password = loginCredentials['password']
 
     keep.login(username, password)
-    displayNotes()    
+    displayNotes()
 
 def animateWelcomeText():
     fig = Figlet(font='larry3d', justify='center', width=width)
-    welcomeText = 'keeperd...'
+    welcomeText = 'keepd...'
 
     text = ''
 
@@ -84,7 +84,7 @@ def animateWelcomeText():
         sys.stdout.write('\033[1;33m')
         sys.stdout.write(fig.renderText(text))
         sleep(0.1)
-    
+
     sys.stdout.write('\n')
     paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page:. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
     # newtext = '\n'.join(sampletext[i:i+80] for i in range(0, len(sampletext), 80))
@@ -117,7 +117,7 @@ def main():
         #sleep(0.2)
 
         displayNotes()
-        
+
     #createNoteView()
 
 main()
