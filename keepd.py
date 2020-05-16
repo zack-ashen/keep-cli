@@ -30,11 +30,6 @@ def bordered(text):
     borderText.append('└' + '─' * borderWidth + '┘')
     return '\n'.join(borderText)
 
-def pretty_print(CL_output):
-    columns = len(CL_output)//200+2
-    lines = (''.join(s.ljust(20) for s in CL_output[i:i+columns-1])+CL_output[i:i+columns][-1] for i in range(0, len(CL_output), columns))
-    return '\n'.join(lines)
-
 def displayNotes():
     fullNotes = keep.all()
     rawNoteText = []
