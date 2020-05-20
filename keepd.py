@@ -9,17 +9,21 @@ from os import system, name
 from time import sleep
 import os
 from PyInquirer import prompt, print_json
+from beautifultable import BeautifulTable
+from prettytable import PrettyTable
+from tabulate import tabulate
+
+# Enter your credentials here to save them
+username = 'zachary.h.a@gmail.com'
+password = 'sbrhcbprueopksqq'
+
+#username = 'example@gmail.com'
+#password = 'password'
 
 columns, rows = os.get_terminal_size(0)
 width = columns
 
 keep = gkeepapi.Keep()
-
-# Enter your credentials here to save them
-#username = 'zachary.h.a@gmail.com'
-#password = 'xethyrhytbyxhdmi'
-username = 'example@gmail.com'
-password = 'password'
 
 def bordered(text):
     lines = text.splitlines()
@@ -30,15 +34,21 @@ def bordered(text):
     borderText.append('└' + '─' * borderWidth + '┘')
     return '\n'.join(borderText)
 
+
+# TODO: Setup Column View
 def displayNotes():
-    fullNotes = keep.all()
+    googleNotes = keep.all()
     rawNoteText = []
 
-    for index in range(len(fullNotes)):
-        notelist = fullNotes[index].text.split('\n')
+    for index in range(len(googleNotes)):
+        notelist = googleNotes[index].text.split('\n')
         notelist[:] = [x for x in notelist if "☑" not in x]
         rawNoteText.append(notelist)
 
+    table3 = [["spam",42],["eggs",451],["bacon",0]]
+    print(tabulate(table3, tablefmt="plain"))
+    #print(rawNoteText)
+    #print(tabulate(rawNoteText, tablefmt="plain"))
     noteText = []
 
     for index in range(len(rawNoteText)):
@@ -46,9 +56,32 @@ def displayNotes():
         note = '\n'.join(note)
         noteText.append(note)
 
+    #print(noteText)
+
+    table = BeautifulTable()
+    table2 = PrettyTable()
+
+    fullNotes = []
+
     for index in range(len(noteText)):
-        fullNote = fullNotes[index].title + '\n' + noteText[index]
-        print(bordered(fullNote))
+        fullNote = googleNotes[index].title + '\n' + noteText[index]
+        #fullNote = bordered(fullNote)
+        fullNotes.append(fullNote)
+
+    #print(fullNotes)
+    #print(tabulate(fullNotes, tablefmt="plain"))
+
+    #for fullNote in fullNotes:
+    #    print(' '.join(fullNotes))
+    for index in range(int(len(fullNotes)/3)):
+        table.append_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
+        table2.add_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
+
+    table.set_style(BeautifulTable.STYLE_GRID)
+    table.set_padding_widths(3)
+
+    #print(table2)
+
 
 def login():
     sys.stdout.write('\033[21;93m')
