@@ -2,12 +2,11 @@
 
 from __future__ import print_function, unicode_literals
 import gkeepapi
-import argparse
 from pyfiglet import Figlet
 import sys
-from os import system, name
 from time import sleep
 import os
+# Testing column view packages
 from PyInquirer import prompt, print_json
 from beautifultable import BeautifulTable
 from prettytable import PrettyTable
@@ -45,10 +44,9 @@ def displayNotes():
         notelist[:] = [x for x in notelist if "☑" not in x]
         rawNoteText.append(notelist)
 
-    table3 = [["spam",42],["eggs",451],["bacon",0]]
-    print(tabulate(table3, tablefmt="plain"))
     #print(rawNoteText)
     #print(tabulate(rawNoteText, tablefmt="plain"))
+
     noteText = []
 
     for index in range(len(rawNoteText)):
@@ -68,17 +66,20 @@ def displayNotes():
         #fullNote = bordered(fullNote)
         fullNotes.append(fullNote)
 
-    #print(fullNotes)
+    for index in range(len(fullNotes)):
+        print(bordered(fullNotes[index]))
+
+    #print(bordered(fullNotes))
     #print(tabulate(fullNotes, tablefmt="plain"))
 
     #for fullNote in fullNotes:
     #    print(' '.join(fullNotes))
-    for index in range(int(len(fullNotes)/3)):
-        table.append_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
-        table2.add_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
+    #for index in range(int(len(fullNotes)/3)):
+    #    table.append_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
+    #    table2.add_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
 
-    table.set_style(BeautifulTable.STYLE_GRID)
-    table.set_padding_widths(3)
+    #table.set_style(BeautifulTable.STYLE_GRID)
+    #table.set_padding_widths(3)
 
     #print(table2)
 
@@ -112,7 +113,7 @@ def animateWelcomeText():
     text = ''
 
     for x in welcomeText:
-        system('clear')
+        os.system('clear')
         text += x
         sys.stdout.write('\033[1;33m')
         sys.stdout.write(fig.renderText(text))
