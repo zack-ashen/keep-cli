@@ -122,8 +122,12 @@ def login():
     }]
 
     loginCredentials = prompt(login)
-    username = loginCredentials['username']
-    password = loginCredentials['password']
+    try:
+        username = loginCredentials['username']
+        password = loginCredentials['password']
+    except:
+        print("Your login credentials were incorrect! Please try again.. \n")
+        login()
 
     keep.login(username, password)
     displayNotes()
