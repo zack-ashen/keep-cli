@@ -35,20 +35,29 @@ keep = gkeepapi.Keep()
 
 
 def bordered(text):
-    """Returns a string with a ASCII border around it.
-    Precondition: text is a string"""
+    """Returns: a string with a ASCII border around it.
+    Precondition: text is a string.
+    Parameter: the string to put a border around."""
 
     lines = text.splitlines()
     borderWidth = max(len(s) for s in lines)
+
+    # Add border on top
     borderText = ['┌' + '─' * borderWidth + '┐']
+
+    # Add border on sides
     for s in lines:
         borderText.append('│' + (s + ' ' * borderWidth)[:borderWidth] + '│')
+
+    # Add bottom border
     borderText.append('└' + '─' * borderWidth + '┘')
+
     return '\n'.join(borderText)
 
 
 # TODO: Setup Column View
 def displayNotes():
+    """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
     rawNoteText = []
 
@@ -160,8 +169,6 @@ def main():
         keep.login(username, password)
 
         sys.stdout.write('\033[21;93m')
-
-        #sleep(0.2)
 
         displayNotes()
 
