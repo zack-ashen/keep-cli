@@ -1,3 +1,11 @@
+"""
+Keepd
+Author: Zachary Ashen
+Date: May 15th 2020
+Description: A CLI version of Google Keep which is a
+note taking/list making website developed by Google.
+Contact: zachary.h.a@gmail.com
+"""
 #!/usr/bin/env python3
 
 from __future__ import print_function, unicode_literals
@@ -6,6 +14,7 @@ from pyfiglet import Figlet
 import sys
 from time import sleep
 import os
+
 # Testing column view packages
 from PyInquirer import prompt, print_json
 from beautifultable import BeautifulTable
@@ -24,7 +33,11 @@ width = columns
 
 keep = gkeepapi.Keep()
 
+
 def bordered(text):
+    """Returns a string with a ASCII border around it.
+    Precondition: text is a string"""
+
     lines = text.splitlines()
     borderWidth = max(len(s) for s in lines)
     borderText = ['┌' + '─' * borderWidth + '┐']
@@ -44,8 +57,8 @@ def displayNotes():
         notelist[:] = [x for x in notelist if "☑" not in x]
         rawNoteText.append(notelist)
 
-    #print(rawNoteText)
-    #print(tabulate(rawNoteText, tablefmt="plain"))
+    # print(rawNoteText)
+    # print(tabulate(rawNoteText, tablefmt="plain"))
 
     noteText = []
 
@@ -54,7 +67,7 @@ def displayNotes():
         note = '\n'.join(note)
         noteText.append(note)
 
-    #print(noteText)
+    # print(noteText)
 
     table = BeautifulTable()
     table2 = PrettyTable()
@@ -63,25 +76,25 @@ def displayNotes():
 
     for index in range(len(noteText)):
         fullNote = googleNotes[index].title + '\n' + noteText[index]
-        #fullNote = bordered(fullNote)
+        # fullNote = bordered(fullNote)
         fullNotes.append(fullNote)
 
     for index in range(len(fullNotes)):
         print(bordered(fullNotes[index]))
 
-    #print(bordered(fullNotes))
-    #print(tabulate(fullNotes, tablefmt="plain"))
+    # print(bordered(fullNotes))
+    # print(tabulate(fullNotes, tablefmt="plain"))
 
-    #for fullNote in fullNotes:
+    # for fullNote in fullNotes:
     #    print(' '.join(fullNotes))
-    #for index in range(int(len(fullNotes)/3)):
+    # for index in range(int(len(fullNotes)/3)):
     #    table.append_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
     #    table2.add_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
 
-    #table.set_style(BeautifulTable.STYLE_GRID)
-    #table.set_padding_widths(3)
+    # table.set_style(BeautifulTable.STYLE_GRID)
+    # table.set_padding_widths(3)
 
-    #print(table2)
+    # print(table2)
 
 
 def login():
