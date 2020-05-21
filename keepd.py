@@ -22,11 +22,11 @@ from prettytable import PrettyTable
 from tabulate import tabulate
 
 # Enter your credentials here to save them
-username = 'zachary.h.a@gmail.com'
-password = 'sbrhcbprueopksqq'
+#username = 'zachary.h.a@gmail.com'
+#password = 'sbrhcbprueopksqq'
 
-#username = 'example@gmail.com'
-#password = 'password'
+username = 'example@gmail.com'
+password = 'password'
 
 columns, rows = os.get_terminal_size(0)
 width = columns
@@ -122,14 +122,16 @@ def login():
     }]
 
     loginCredentials = prompt(login)
+
+    username = loginCredentials['username']
+    password = loginCredentials['password']
+
     try:
-        username = loginCredentials['username']
-        password = loginCredentials['password']
+        keep.login(username, password)
     except:
         print("Your login credentials were incorrect! Please try again.. \n")
-        login()
 
-    keep.login(username, password)
+
     displayNotes()
 
 def animateWelcomeText():
