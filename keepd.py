@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Keepd
 Author: Zachary Ashen
@@ -6,7 +8,6 @@ Description: A CLI version of Google Keep which is a
 note taking/list making website developed by Google.
 Contact: zachary.h.a@gmail.com
 """
-#!/usr/bin/env python3
 
 from __future__ import print_function, unicode_literals
 import gkeepapi
@@ -22,11 +23,11 @@ from prettytable import PrettyTable
 from tabulate import tabulate
 
 # Enter your credentials here to save them
-#username = 'zachary.h.a@gmail.com'
-#password = 'sbrhcbprueopksqq'
+username = 'zachary.h.a@gmail.com'
+password = 'sbrhcbprueopksqq'
 
-username = 'example@gmail.com'
-password = 'password'
+#username = 'example@gmail.com'
+#password = 'password'
 
 columns, rows = os.get_terminal_size(0)
 width = columns
@@ -91,22 +92,10 @@ def displayNotes():
     for index in range(len(fullNotes)):
         print(bordered(fullNotes[index]))
 
-    # print(bordered(fullNotes))
-    # print(tabulate(fullNotes, tablefmt="plain"))
-
-    # for fullNote in fullNotes:
-    #    print(' '.join(fullNotes))
-    # for index in range(int(len(fullNotes)/3)):
-    #    table.append_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
-    #    table2.add_row([fullNotes[index], fullNotes[index+1], fullNotes[index+2]])
-
-    # table.set_style(BeautifulTable.STYLE_GRID)
-    # table.set_padding_widths(3)
-
-    # print(table2)
-
 
 def login():
+    """Prompts the user to login and logs them in."""
+    
     sys.stdout.write('\033[21;93m')
     sys.stdout.write('Please Login: \n \n')
     login = [
@@ -129,12 +118,14 @@ def login():
     try:
         keep.login(username, password)
     except:
-        print("Your login credentials were incorrect! Please try again.. \n")
+        print("Your login credentials were incorrect!\n")
 
 
     displayNotes()
 
 def animateWelcomeText():
+    """Animates the welcome keepd text in ASCII font."""
+
     fig = Figlet(font='larry3d', justify='center', width=width)
     welcomeText = 'keepd...'
 
@@ -164,7 +155,7 @@ def animateWelcomeText():
         line += '-'
     print(line)
 
-def main():
+if __name__ === '__main__':
     animateWelcomeText()
     if username=='example@gmail.com' and password=='password':
         login()
@@ -177,7 +168,3 @@ def main():
         sys.stdout.write('\033[21;93m')
 
         displayNotes()
-
-    #createNoteView()
-
-main()
