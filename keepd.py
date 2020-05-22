@@ -155,7 +155,7 @@ def animateWelcomeText():
         line += '-'
     print(line)
 
-if __name__ === '__main__':
+if __name__ == '__main__':
     animateWelcomeText()
     if username=='example@gmail.com' and password=='password':
         login()
