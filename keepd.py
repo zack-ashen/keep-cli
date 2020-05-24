@@ -15,6 +15,8 @@ from pyfiglet import Figlet
 import sys
 from time import sleep
 import os
+from textwrap import fill
+import re
 
 # Testing column view packages
 from PyInquirer import prompt, print_json
@@ -24,7 +26,7 @@ from tabulate import tabulate
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
-password = 'sbrhcbprueopksqq'
+password = 'fkxcrvjpepkvwtqd'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -54,6 +56,11 @@ def bordered(text):
     borderText.append('└' + '─' * borderWidth + '┘')
 
     return '\n'.join(borderText)
+
+def filterTop(x):
+    if '┌' in x:
+        return True
+    return False
 
 
 # TODO: Setup Column View
@@ -86,16 +93,29 @@ def displayNotes():
 
     for index in range(len(noteText)):
         fullNote = googleNotes[index].title + '\n' + noteText[index]
-        # fullNote = bordered(fullNote)
+        fullNote = bordered(fullNote)
         fullNotes.append(fullNote)
 
-    for index in range(len(fullNotes)):
-        print(bordered(fullNotes[index]))
+
+    fullNoteBorderedListSplit = list(map(lambda x: x.split('\n'), fullNotes))
+    fullNoteBorderedListLines = []
+
+    for index in range(len(fullNoteBorderedListSplit)):
+        for i in range(len(fullNoteBorderedListSplit[index])):
+            fullNoteBorderedListLines.append(fullNoteBorderedListSplit[index][i])
+
+    fullNoteBorderedListFiltered = list(filter(filterTop, fullNoteBorderedListLines))
+
+    confusion = fill(str(fullNoteBorderedListFiltered), width=width)
+    print(re.sub("['',]", '', confusion).strip('[]'))
+    for index in range(len(fullNoteBorderedListFiltered)):
+        #print(fullNoteBorderedListFiltered[index], end = ' ')
+        pass
 
 
 def login():
     """Prompts the user to login and logs them in."""
-    
+
     sys.stdout.write('\033[21;93m')
     sys.stdout.write('Please Login: \n \n')
     login = [
@@ -124,7 +144,7 @@ def login():
     displayNotes()
 
 def animateWelcomeText():
-    """Animates the welcome keepd text in ASCII font."""
+    """Animates the welcome keepd text in ASCII font and welcome paragraph."""
 
     fig = Figlet(font='larry3d', justify='center', width=width)
     welcomeText = 'keepd...'
@@ -139,29 +159,33 @@ def animateWelcomeText():
         sleep(0.1)
 
     sys.stdout.write('\n')
+
     paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page:. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
-    # newtext = '\n'.join(sampletext[i:i+80] for i in range(0, len(sampletext), 80))
 
     paragraphStrings = []
 
-    for index in range(0, len(paragraphText), 91):
-        paragraphStrings.append(paragraphText[index : index + 91])
+    if width < 100:
+        print(paragraphText)
+    else:
+        for index in range(0, len(paragraphText), 91):
+            paragraphStrings.append(paragraphText[index : index + 91])
 
-    for index in range(0, len(paragraphStrings)):
-        print(paragraphStrings[index].center(width))
+        for index in range(0, len(paragraphStrings)):
+            print(paragraphStrings[index].center(width))
 
-    line = ''
-    for index in range(width):
-        line += '-'
-    print(line)
+        line = ''
+        for index in range(width):
+            line += '-'
+        print(line)
 
 if __name__ == '__main__':
     animateWelcomeText()
     if username=='example@gmail.com' and password=='password':
         login()
     else:
+        # If user has already entered login info then display notes.
         sys.stdout.write('\033[1;32m')
-        print('Using credentials you entered in keeperd.py to login...'.center(width))
+        print('Using credentials you entered in keepd.py to login...'.center(width))
 
         keep.login(username, password)
 
