@@ -81,8 +81,40 @@ def displayNotes():
 
     #print(rawNoteText)
 
-#    for rawNoteText[0], rawNoteText[1] in zip(rawNoteText[0], rawNoteText[1]):
-#        print(rawNoteText[0], rawNoteText[1])
+    for index in range(len(rawNoteText)):
+
+        note = rawNoteText[index]
+        borderWidth = max(len(s) for s in note)
+
+        # add top border
+        topBorder = ['┌' + '─' * borderWidth + '┐']
+        topBorder = re.sub("['',]", '', str(topBorder)).strip('[]')
+        rawNoteText[index].insert(0, topBorder)
+
+        # iterate over middle lines and add border there
+        for i in range(len(note)):
+            if i > 0:
+                note[i] = '│' + (note[i] + ' ' * borderWidth)[:borderWidth] + '│'
+
+        # add bottom borders
+        bottomBorder = ['└' + '─' * borderWidth + '┘']
+        bottomBorder = re.sub("['',]", '', str(bottomBorder)).strip('[]')
+        rawNoteText[index].append(bottomBorder)
+
+    maxNoteLength = max(len(i) for i in rawNoteText)
+    for index in range(len(rawNoteText)):
+        # add empty spaces below
+        note = rawNoteText[index]
+        for i in range(len(note)):
+            if len(note) < maxNoteLength:
+                for x in range(maxNoteLength-len(note)):
+                    note.append('')
+
+
+    #print(rawNoteText)
+
+    for rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3] in zip(rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3]):
+        print(rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3])
 
 
     # print(rawNoteText)
