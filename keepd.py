@@ -26,7 +26,7 @@ from tabulate import tabulate
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
-password = 'fkxcrvjpepkvwtqd'
+password = 'rxcdwscebuulksmn'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -67,7 +67,7 @@ def filterMiddle(x):
         return True
     return False
 
-# TODO: Setup Column View
+# TODO: Setup Rows
 def displayNotes():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
@@ -102,19 +102,39 @@ def displayNotes():
         rawNoteText[index].append(bottomBorder)
 
     maxNoteLength = max(len(i) for i in rawNoteText)
+    noteWidthAccumulator = 0
+
+    foundColumnCount = False
+
     for index in range(len(rawNoteText)):
         # add empty spaces below
         note = rawNoteText[index]
+        borderWidth = max(len(s) for s in note)
+
+        noteWidthAccumulator += borderWidth
+        if noteWidthAccumulator > width and not foundColumnCount:
+            #print(noteWidthAccumulator, width)
+            columnCount = rawNoteText.index(rawNoteText[index-1])
+            foundColumnCount = True
+
         for i in range(len(note)):
             if len(note) < maxNoteLength:
                 for x in range(maxNoteLength-len(note)):
-                    note.append('')
+                    note.append(' ' * borderWidth)
+
+    print(columnCount)
+
+
+    #for index in range(len(rawNoteText)//columnCount):
+        #note = rawNoteText[index]
+        #testArray = [rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]]
+        #print(zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]))
+        #for rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2] in zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]):
+            #print(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2])
+            #pass
 
 
     #print(rawNoteText)
-
-    for rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3] in zip(rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3]):
-        print(rawNoteText[0], rawNoteText[1], rawNoteText[2], rawNoteText[3])
 
 
     # print(rawNoteText)
@@ -197,7 +217,9 @@ def login():
     try:
         keep.login(username, password)
     except:
+        sys.stdout.write('\u001b[31m')
         print("Your login credentials were incorrect!\n")
+        return
 
 
     displayNotes()
@@ -219,7 +241,7 @@ def animateWelcomeText():
 
     sys.stdout.write('\n')
 
-    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page:. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
+    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keepd. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
 
     paragraphStrings = []
 
@@ -244,9 +266,14 @@ if __name__ == '__main__':
     else:
         # If user has already entered login info then display notes.
         sys.stdout.write('\033[1;32m')
-        print('Using credentials you entered in keepd.py to login...'.center(width))
+        print('Using credentials you entered in keepd.py to login...\n'.center(width))
 
-        keep.login(username, password)
+
+        try:
+            keep.login(username, password)
+        except:
+            sys.stdout.write('\u001b[31m')
+            print("Your login credentials were incorrect!\n")
 
         sys.stdout.write('\033[21;93m')
 
