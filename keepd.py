@@ -62,17 +62,28 @@ def filterTop(x):
         return True
     return False
 
+def filterMiddle(x):
+    if '│' in x:
+        return True
+    return False
 
 # TODO: Setup Column View
 def displayNotes():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
+
     rawNoteText = []
 
     for index in range(len(googleNotes)):
         notelist = googleNotes[index].text.split('\n')
         notelist[:] = [x for x in notelist if "☑" not in x]
         rawNoteText.append(notelist)
+
+    #print(rawNoteText)
+
+#    for rawNoteText[0], rawNoteText[1] in zip(rawNoteText[0], rawNoteText[1]):
+#        print(rawNoteText[0], rawNoteText[1])
+
 
     # print(rawNoteText)
     # print(tabulate(rawNoteText, tablefmt="plain"))
@@ -83,6 +94,7 @@ def displayNotes():
         note = rawNoteText[index]
         note = '\n'.join(note)
         noteText.append(note)
+
 
     # print(noteText)
 
@@ -96,6 +108,17 @@ def displayNotes():
         fullNote = bordered(fullNote)
         fullNotes.append(fullNote)
 
+    #print(fullNotes)
+
+    #for index in range(len(fullNotes)):
+    #    print(fmt.format(fullNotes[index], fullNotes[index+1]))
+
+    list_a = ['┌─────────────────────────┐', '│Hello this is  a test│', '│Hello this is a test│']
+    list_b = ['┌─────────────────────────┐', '│Hello this is  a test│', '│Hello this is a test│']
+
+    for item_a, item_b in zip(list_a, list_b):
+        #print(item_a, item_b)
+        pass
 
     fullNoteBorderedListSplit = list(map(lambda x: x.split('\n'), fullNotes))
     fullNoteBorderedListLines = []
@@ -104,13 +127,17 @@ def displayNotes():
         for i in range(len(fullNoteBorderedListSplit[index])):
             fullNoteBorderedListLines.append(fullNoteBorderedListSplit[index][i])
 
-    fullNoteBorderedListFiltered = list(filter(filterTop, fullNoteBorderedListLines))
+    topLineFiltered = list(filter(filterTop, fullNoteBorderedListLines))
+    middleLinesFiltered = list(filter(filterMiddle, fullNoteBorderedListLines))
+    topLine = fill(str(topLineFiltered), width=width)
+    middleLines = fill(str(middleLinesFiltered), width=width)
 
-    confusion = fill(str(fullNoteBorderedListFiltered), width=width)
-    print(re.sub("['',]", '', confusion).strip('[]'))
-    for index in range(len(fullNoteBorderedListFiltered)):
+    #print(re.sub("['',]", '', topLine).strip('[]'))
+    #print(re.sub("['',]", '', middleLines).strip('[]'))
+
+    #for index in range(len(fullNoteBorderedListFiltered)):
         #print(fullNoteBorderedListFiltered[index], end = ' ')
-        pass
+        #pass
 
 
 def login():
