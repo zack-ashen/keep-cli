@@ -29,6 +29,7 @@ password = 'nldhilyhirqxrofl'
 columns, rows = os.get_terminal_size(0)
 width = columns
 
+
 keep = gkeepapi.Keep()
 
 def main():
@@ -110,37 +111,26 @@ def addListBorder(nestedList):
         nestedList[index].append(bottomBorder)
     return nestedList
 
-
-
 def printRow(nestedList, startPos):
     maxNestedListLength = max(len(i) for i in nestedList)
     nestedListItemWidthAccumulator = 0
     foundColumnCount = False
-
-
-    #print(nestedList[startPos:][0][1])
-
+    global columnCount
     rowPosition = range(len(nestedList))
-    #print(rowPosition[startPos:])
+
     for index in rowPosition[startPos:]:
         # add empty spaces below
-
         nestedListItem = nestedList[index]
         noteWidth = max(len(s) for s in nestedListItem)
-        #print(index, noteWidth, width)
         nestedListItemWidthAccumulator += noteWidth
         if nestedListItemWidthAccumulator > width-5 and not foundColumnCount:
             columnCount = (nestedList.index(nestedList[index-1]))
             foundColumnCount = True
 
         elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
-            #columnCount = len(nestedList[startPos:])-1
             columnCount = (nestedList.index(nestedList[index-1]))
             foundColumnCount = True
 
-
-    #print('Column Count: ', columnCount)
-    #print(startPos, columnCount)
 
     if (columnCount+1) == startPos:
         maxNestedListLength = len(nestedList[columnCount+1])
@@ -178,8 +168,7 @@ def printRow(nestedList, startPos):
 
         for i in range(len(nestedListFormatted)):
             print(nestedListFormatted[i])
-            #print(nestedListFormatted)
-            #pass
+
     else:
         for index in range(len(nestedListFormatted)):
             nestedListFormatted[index] = list(nestedListFormatted[index])
@@ -188,13 +177,6 @@ def printRow(nestedList, startPos):
         for i in range(len(nestedListFormatted)):
             print(re.sub("['',()]", '', str(nestedListFormatted[i])).strip('[]'))
 
-    #print(nestedListFormatted[0])
-
-    # Print Notes
-
-
-
-# TODO: Setup Rows and clean up to replace chunks of code with functions
 def displayNotes():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
@@ -212,9 +194,16 @@ def displayNotes():
 
     printRow(noteList, 0)
 
-    printRow(noteList, 3)
+    #print(columnCount)
 
-    printRow(noteList, 5)
+    #printRow(noteList, 5)
+
+    i = columnCount + 1
+
+    while len(noteList) >= columnCount + 2:
+        printRow(noteList, columnCount+1)
+        print(columnCount)
+        sleep(1)
 
     #printRow(noteList, 5)
 
