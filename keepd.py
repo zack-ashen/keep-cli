@@ -17,12 +17,7 @@ from time import sleep
 import os
 from textwrap import fill
 import re
-
-# Testing column view packages
 from PyInquirer import prompt, print_json
-from beautifultable import BeautifulTable
-from prettytable import PrettyTable
-from tabulate import tabulate
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
@@ -56,36 +51,6 @@ def main():
         sys.stdout.write('\033[21;93m')
 
         displayNotes()
-
-def bordered(text):
-    """Returns: a string with a ASCII border around it.
-    Precondition: text is a string.
-    Parameter: the string to put a border around."""
-
-    lines = text.splitlines()
-    borderWidth = max(len(s) for s in lines)
-
-    # Add border on top
-    borderText = ['┌' + '─' * borderWidth + '┐']
-
-    # Add border on sides
-    for s in lines:
-        borderText.append('│' + (s + ' ' * borderWidth)[:borderWidth] + '│')
-
-    # Add bottom border
-    borderText.append('└' + '─' * borderWidth + '┘')
-
-    return '\n'.join(borderText)
-
-def filterTop(x):
-    if '┌' in x:
-        return True
-    return False
-
-def filterMiddle(x):
-    if '│' in x:
-        return True
-    return False
 
 # TODO: Setup Rows
 def displayNotes():
@@ -151,85 +116,27 @@ def displayNotes():
     noteTextFormatted = list(noteTextFormatted)
     testList = list(zip(rawNoteText[0], rawNoteText[1], rawNoteText[2]))
 
+    centerSpaceIterator = abs((width - len(str(noteTextFormatted[0])))//2)-1
+    centerSpace = ''
+    for i in range(centerSpaceIterator):
+        centerSpace += ' '
+
+    for index in range(len(noteTextFormatted)):
+        noteTextFormatted[index] = list(noteTextFormatted[index])
+        noteTextFormatted[index][0] = centerSpace + noteTextFormatted[index][0]
+
+    # Center text
+    #print(len(str(testList[0])))
+    #print(re.sub("['',()]", '', str(testList[0])))
+
     for i in range(len(noteTextFormatted)):
-        print(re.sub("['',()]", '', str(noteTextFormatted[i])))
-    #noteTextFormatted = list(zip(rawNoteText[index]) for index in range(len(rawNoteText)))
+        print(re.sub("['',()]", '', str(noteTextFormatted[i])).strip('[]'))
 
-
-
-    for index in range(len(rawNoteText)//columnCount):
-        note = rawNoteText[index]
-        testArray = [rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]]
-        testList = list(zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]))
-        for i in range(len(testList)):
-            #print(re.sub("['',()]", '', str(testList[i])))
-            pass
+    # -------------------------------------------------------------------------------------
 
 
 
 
-
-        for rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2] in zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]):
-            #print(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2])
-            pass
-
-
-    #print(rawNoteText)
-
-
-    # print(rawNoteText)
-    # print(tabulate(rawNoteText, tablefmt="plain"))
-
-    noteText = []
-
-    for index in range(len(rawNoteText)):
-        note = rawNoteText[index]
-        note = '\n'.join(note)
-        noteText.append(note)
-
-
-    # print(noteText)
-
-    table = BeautifulTable()
-    table2 = PrettyTable()
-
-    fullNotes = []
-
-    for index in range(len(noteText)):
-        fullNote = googleNotes[index].title + '\n' + noteText[index]
-        fullNote = bordered(fullNote)
-        fullNotes.append(fullNote)
-
-    #print(fullNotes)
-
-    #for index in range(len(fullNotes)):
-    #    print(fmt.format(fullNotes[index], fullNotes[index+1]))
-
-    list_a = ['┌─────────────────────────┐', '│Hello this is  a test│', '│Hello this is a test│']
-    list_b = ['┌─────────────────────────┐', '│Hello this is  a test│', '│Hello this is a test│']
-
-    for item_a, item_b in zip(list_a, list_b):
-        #print(item_a, item_b)
-        pass
-
-    fullNoteBorderedListSplit = list(map(lambda x: x.split('\n'), fullNotes))
-    fullNoteBorderedListLines = []
-
-    for index in range(len(fullNoteBorderedListSplit)):
-        for i in range(len(fullNoteBorderedListSplit[index])):
-            fullNoteBorderedListLines.append(fullNoteBorderedListSplit[index][i])
-
-    topLineFiltered = list(filter(filterTop, fullNoteBorderedListLines))
-    middleLinesFiltered = list(filter(filterMiddle, fullNoteBorderedListLines))
-    topLine = fill(str(topLineFiltered), width=width)
-    middleLines = fill(str(middleLinesFiltered), width=width)
-
-    #print(re.sub("['',]", '', topLine).strip('[]'))
-    #print(re.sub("['',]", '', middleLines).strip('[]'))
-
-    #for index in range(len(fullNoteBorderedListFiltered)):
-        #print(fullNoteBorderedListFiltered[index], end = ' ')
-        #pass
 
 
 def login():
