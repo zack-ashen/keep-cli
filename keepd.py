@@ -21,7 +21,7 @@ from PyInquirer import prompt, print_json
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
-password = 'kmaclzvenpdofpqw'
+password = 'nldhilyhirqxrofl'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -52,89 +52,181 @@ def main():
 
         displayNotes()
 
-# TODO: Setup Rows
-def displayNotes():
-    """Displays the notes from your Google Keep account in a grid view with borders."""
-    googleNotes = keep.all()
+def listifyGoogleNotes(googleNotes):
+    """Returns: a nested list from a Google Note object. Checked items are removed
+    from the list.
 
-    rawNoteText = []
+    Example: Google Note object with list titled 'Foo List' and items:
+    'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
+    'Garbage in garbage out the end of this note', becomes:
+    [[["Foo List"], ["get apples"], ["pick up gorceries"]],
+    [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
+
+     Precondition: googleNote is a list containing either items of type
+     'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
+
+
+    noteList = []
 
     for index in range(len(googleNotes)):
-        notelist = googleNotes[index].text.split('\n')
-        notelist[:] = [x for x in notelist if "☑" not in x]
-        rawNoteText.append(notelist)
+        if type(googleNotes[index]) == gkeepapi.node.List:
+            uncheckedList = googleNotes[index].unchecked
+            noteTitle = googleNotes[index].title
+            for i in range(len(uncheckedList)):
+                uncheckedList[i] = uncheckedList[i].text
+                uncheckedList[i] = '□  ' + uncheckedList[i]
+            noteList.append(uncheckedList)
+            uncheckedList.insert(0, noteTitle)
+        else:
+            note = googleNotes[index]
+            noteTitle = note.title
+            note = note.text.split('\n')
+            noteList.append(note)
+            note.insert(0, noteTitle)
 
-    #print(rawNoteText)
+    return noteList
 
-    for index in range(len(rawNoteText)):
+def addListBorder(nestedList):
+    """Returns: a ragged list with ASCII borders. The nested lists will have borders.
+    Precondition: list is a nested list and all items in the nested list are strings"""
 
-        note = rawNoteText[index]
-        borderWidth = max(len(s) for s in note)
+    for index in range(len(nestedList)):
+        listItem = nestedList[index]
+        borderWidth = max(len(s) for s in listItem)
 
         # add top border
         topBorder = ['┌' + '─' * borderWidth + '┐']
         topBorder = re.sub("['',]", '', str(topBorder)).strip('[]')
-        rawNoteText[index].insert(0, topBorder)
+        nestedList[index].insert(0, topBorder)
 
         # iterate over middle lines and add border there
-        for i in range(len(note)):
+        for i in range(len(listItem)):
             if i > 0:
-                note[i] = '│' + (note[i] + ' ' * borderWidth)[:borderWidth] + '│'
+                listItem[i] = '│' + (listItem[i] + ' ' * borderWidth)[:borderWidth] + '│'
 
         # add bottom borders
         bottomBorder = ['└' + '─' * borderWidth + '┘']
         bottomBorder = re.sub("['',]", '', str(bottomBorder)).strip('[]')
-        rawNoteText[index].append(bottomBorder)
+        nestedList[index].append(bottomBorder)
+    return nestedList
 
-    maxNoteLength = max(len(i) for i in rawNoteText)
-    noteWidthAccumulator = 0
 
+
+def printRow(nestedList, startPos):
+    maxNestedListLength = max(len(i) for i in nestedList)
+    nestedListItemWidthAccumulator = 0
     foundColumnCount = False
 
-    for index in range(len(rawNoteText)):
-        # add empty spaces below
-        note = rawNoteText[index]
-        borderWidth = max(len(s) for s in note)
 
-        noteWidthAccumulator += borderWidth
-        if noteWidthAccumulator > width and not foundColumnCount:
-            #print(noteWidthAccumulator, width)
-            columnCount = rawNoteText.index(rawNoteText[index-1])
+    #print(nestedList[startPos:][0][1])
+
+    rowPosition = range(len(nestedList))
+    #print(rowPosition[startPos:])
+    for index in rowPosition[startPos:]:
+        # add empty spaces below
+
+        nestedListItem = nestedList[index]
+        noteWidth = max(len(s) for s in nestedListItem)
+        #print(index, noteWidth, width)
+        nestedListItemWidthAccumulator += noteWidth
+        if nestedListItemWidthAccumulator > width-5 and not foundColumnCount:
+            columnCount = (nestedList.index(nestedList[index-1]))
             foundColumnCount = True
 
-        for i in range(len(note)):
-            if len(note) < maxNoteLength:
-                for x in range(maxNoteLength-len(note)):
-                    note.append(' ' * borderWidth)
+        elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
+            #columnCount = len(nestedList[startPos:])-1
+            columnCount = (nestedList.index(nestedList[index-1]))
+            foundColumnCount = True
 
-    #print(columnCount)
-    rawNoteTextRow = rawNoteText[:columnCount+1]
-    #print(list(noteTextFormatted))
-    noteTextFormatted = zip(*rawNoteTextRow)
-        #print(index)
 
-    noteTextFormatted = list(noteTextFormatted)
-    testList = list(zip(rawNoteText[0], rawNoteText[1], rawNoteText[2]))
+    #print('Column Count: ', columnCount)
+    #print(startPos, columnCount)
 
-    centerSpaceIterator = abs((width - len(str(noteTextFormatted[0])))//2)-1
+    if (columnCount+1) == startPos:
+        maxNestedListLength = len(nestedList[columnCount+1])
+    else:
+        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnCount+1])
+
+    for index in rowPosition[startPos:]:
+        nestedListItem = nestedList[index]
+        noteWidth = max(len(s) for s in nestedListItem)
+        for i in range(len(nestedListItem)):
+            if len(nestedListItem) < maxNestedListLength:
+                for x in range(maxNestedListLength-len(nestedListItem)):
+                    nestedListItem.append(' ' * noteWidth)
+
+    if (columnCount+1) == startPos:
+        nestedListFormatted = nestedList[columnCount+1]
+    else:
+        nestedListRow = nestedList[startPos:columnCount+1]
+
+        nestedListFormatted = zip(*nestedListRow)
+
+        nestedListFormatted = list(nestedListFormatted)
+
+    # Center Notes
+    centerSpaceIterator = abs((width - len(str(nestedListFormatted[0])))//2)+5
     centerSpace = ''
+
     for i in range(centerSpaceIterator):
         centerSpace += ' '
 
-    for index in range(len(noteTextFormatted)):
-        noteTextFormatted[index] = list(noteTextFormatted[index])
-        noteTextFormatted[index][0] = centerSpace + noteTextFormatted[index][0]
+    if (columnCount+1) == startPos:
+        nestedListFormatted = nestedList[columnCount+1]
+        for index in range(len(nestedListFormatted)):
+            nestedListFormatted[index] = centerSpace + nestedListFormatted[index]
 
-    # Center text
-    #print(len(str(testList[0])))
-    #print(re.sub("['',()]", '', str(testList[0])))
+        for i in range(len(nestedListFormatted)):
+            print(nestedListFormatted[i])
+            #print(nestedListFormatted)
+            #pass
+    else:
+        for index in range(len(nestedListFormatted)):
+            nestedListFormatted[index] = list(nestedListFormatted[index])
+            nestedListFormatted[index][0] = centerSpace + nestedListFormatted[index][0]
 
-    for i in range(len(noteTextFormatted)):
-        print(re.sub("['',()]", '', str(noteTextFormatted[i])).strip('[]'))
+        for i in range(len(nestedListFormatted)):
+            print(re.sub("['',()]", '', str(nestedListFormatted[i])).strip('[]'))
+
+    #print(nestedListFormatted[0])
+
+    # Print Notes
+
+
+
+# TODO: Setup Rows and clean up to replace chunks of code with functions
+def displayNotes():
+    """Displays the notes from your Google Keep account in a grid view with borders."""
+    googleNotes = keep.all()
+
+    noteList = listifyGoogleNotes(googleNotes)
+
+    noteList = addListBorder(noteList)
+
+    #for i in range(len(noteList[5])):
+    #    print(noteList[5][i])
+
+    #print(noteList[5])
+
+    # Find Amount of Notes in a Column (Column Count) and
+
+    printRow(noteList, 0)
+
+    printRow(noteList, 3)
+
+    printRow(noteList, 5)
+
+    #printRow(noteList, 5)
+
+    #print(type(noteList[1][1]))
+    #print(noteList[1])
+    #print(googleNotes[1], googleNotes[0])
+    #print(noteList[1])
+    #print(noteTextFormatted[1][1])
+
+    #keep.sync()
 
     # -------------------------------------------------------------------------------------
-
-
 
 
 
