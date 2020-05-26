@@ -205,18 +205,6 @@ def displayNotes():
         print(columnCount)
         sleep(1)
 
-    #printRow(noteList, 5)
-
-    #print(type(noteList[1][1]))
-    #print(noteList[1])
-    #print(googleNotes[1], googleNotes[0])
-    #print(noteList[1])
-    #print(noteTextFormatted[1][1])
-
-    #keep.sync()
-
-    # -------------------------------------------------------------------------------------
-
 
 
 
@@ -276,11 +264,11 @@ def animateWelcomeText():
     if width < 100:
         print(paragraphText)
     else:
-        for index in range(0, len(paragraphText), 91):
-            paragraphStrings.append(paragraphText[index : index + 91])
-
-        for index in range(0, len(paragraphStrings)):
-            print(paragraphStrings[index].center(width))
+        paragraphText = str(fill(paragraphText, width/2))
+        paragraphTextList = paragraphText.split('\n')
+        for index in range(len(paragraphTextList)):
+            print(paragraphTextList[index].center(width))
+        print('\n')
 
         line = ''
         for index in range(width):
