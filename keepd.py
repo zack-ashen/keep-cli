@@ -26,7 +26,7 @@ from tabulate import tabulate
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
-password = 'rxcdwscebuulksmn'
+password = 'kmaclzvenpdofpqw'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -36,6 +36,26 @@ width = columns
 
 keep = gkeepapi.Keep()
 
+def main():
+    animateWelcomeText()
+    if username=='example@gmail.com' and password=='password':
+        login()
+    else:
+        # If user has already entered login info then display notes.
+        sys.stdout.write('\033[1;32m')
+        print('Using credentials you entered in keepd.py to login...\n'.center(width))
+
+
+        try:
+            keep.login(username, password)
+        except:
+            sys.stdout.write('\u001b[31m')
+            print("Your login credentials were incorrect!\n")
+            return
+
+        sys.stdout.write('\033[21;93m')
+
+        displayNotes()
 
 def bordered(text):
     """Returns: a string with a ASCII border around it.
@@ -122,16 +142,36 @@ def displayNotes():
                 for x in range(maxNoteLength-len(note)):
                     note.append(' ' * borderWidth)
 
-    print(columnCount)
+    #print(columnCount)
+    rawNoteTextRow = rawNoteText[:columnCount+1]
+    #print(list(noteTextFormatted))
+    noteTextFormatted = zip(*rawNoteTextRow)
+        #print(index)
+
+    noteTextFormatted = list(noteTextFormatted)
+    testList = list(zip(rawNoteText[0], rawNoteText[1], rawNoteText[2]))
+
+    for i in range(len(noteTextFormatted)):
+        print(re.sub("['',()]", '', str(noteTextFormatted[i])))
+    #noteTextFormatted = list(zip(rawNoteText[index]) for index in range(len(rawNoteText)))
 
 
-    #for index in range(len(rawNoteText)//columnCount):
-        #note = rawNoteText[index]
-        #testArray = [rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]]
-        #print(zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]))
-        #for rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2] in zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]):
+
+    for index in range(len(rawNoteText)//columnCount):
+        note = rawNoteText[index]
+        testArray = [rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]]
+        testList = list(zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]))
+        for i in range(len(testList)):
+            #print(re.sub("['',()]", '', str(testList[i])))
+            pass
+
+
+
+
+
+        for rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2] in zip(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2]):
             #print(rawNoteText[index], rawNoteText[index+1], rawNoteText[index+2])
-            #pass
+            pass
 
 
     #print(rawNoteText)
@@ -260,21 +300,4 @@ def animateWelcomeText():
         print(line)
 
 if __name__ == '__main__':
-    animateWelcomeText()
-    if username=='example@gmail.com' and password=='password':
-        login()
-    else:
-        # If user has already entered login info then display notes.
-        sys.stdout.write('\033[1;32m')
-        print('Using credentials you entered in keepd.py to login...\n'.center(width))
-
-
-        try:
-            keep.login(username, password)
-        except:
-            sys.stdout.write('\u001b[31m')
-            print("Your login credentials were incorrect!\n")
-
-        sys.stdout.write('\033[21;93m')
-
-        displayNotes()
+    main()
