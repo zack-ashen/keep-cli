@@ -155,7 +155,7 @@ def printRow(nestedList, startPos):
         nestedListFormatted = list(nestedListFormatted)
 
     # Center Notes
-    centerSpaceIterator = abs((width - len(str(nestedListFormatted[0])))//2)+5
+    centerSpaceIterator = abs((width - len(str(nestedListFormatted[0])))//2)+1
     centerSpace = ''
 
     for i in range(centerSpaceIterator):
@@ -167,6 +167,9 @@ def printRow(nestedList, startPos):
             nestedListFormatted[index] = centerSpace + nestedListFormatted[index]
 
         for i in range(len(nestedListFormatted)):
+            sys.stdout.write('\u001b[0;33m')
+            if i == 1:
+                sys.stdout.write('\u001b[1;33m')
             print(nestedListFormatted[i])
 
     else:
@@ -175,6 +178,9 @@ def printRow(nestedList, startPos):
             nestedListFormatted[index][0] = centerSpace + nestedListFormatted[index][0]
 
         for i in range(len(nestedListFormatted)):
+            sys.stdout.write('\u001b[0;33m')
+            if i == 1:
+                sys.stdout.write('\u001b[1;33m')
             print(re.sub("['',()]", '', str(nestedListFormatted[i])).strip('[]'))
 
 def displayNotes():
@@ -191,7 +197,8 @@ def displayNotes():
     #print(noteList[5])
 
     # Find Amount of Notes in a Column (Column Count) and
-
+    #sys.stdout.write('\u001b[31m')
+    sys.stdout.write('\033[0;33m')
     printRow(noteList, 0)
 
     #print(columnCount)
@@ -199,11 +206,14 @@ def displayNotes():
     #printRow(noteList, 5)
 
     i = columnCount + 1
-
+    oldColumnCount = 1
     while len(noteList) >= columnCount + 2:
+        if oldColumnCount == columnCount:
+            break
+
         printRow(noteList, columnCount+1)
-        print(columnCount)
-        sleep(1)
+
+        oldColumnCount = columnCount
 
 
 
@@ -272,7 +282,7 @@ def animateWelcomeText():
 
         line = ''
         for index in range(width):
-            line += '-'
+            line += '─'
         print(line)
 
 if __name__ == '__main__':
