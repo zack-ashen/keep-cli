@@ -1,7 +1,14 @@
-# keepd
-Keepd is a cli Google Keep client. You can add, delete, and manage your google keep notes.
+# keep-cli
+Keep-cli is a cli Google Keep client. You can add, delete, and manage your Google Keep notes.
 
-## TODO
-* Add create notes
-* Fix columns
-* Make interactive
+## !TODO!
+- [ ] Add list of options beneath notes:
+```
+  * Edit Note
+  * Delete Note
+  * Create a New Note
+``` 
+- [ ] Fix row rendering
+- [ ] Add an edit note "page"
+- [ ] Add a create note "page"
+- [ ] Add a make list portion to the create note
