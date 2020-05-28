@@ -1,13 +1,19 @@
+import re
+import sys
 
 class KeepGrid:
-    """
-    """
+    """A Google Keep Grid
+    Attribute: googleNotes is a """
+
+    columnCount = 0
 
     def __init__(self, googleNotes, termWidth):
+        """"""
+        assert str(type(googleNotes)) == "<class 'list'>", repr(googleNotes) + ' is not a list.'
         self.googleNotes = googleNotes
         self.termWidth = termWidth
 
-    def listifyGoogleNotes(self, googleNotes):
+    def _listifyGoogleNotes(self, googleNotes):
         """Returns: a nested list from a Google Note object. Checked items are removed
         from the list.
 
@@ -19,12 +25,11 @@ class KeepGrid:
 
          Precondition: googleNote is a list containing either items of type
          'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
-
-
+        
         noteList = []
 
         for index in range(len(googleNotes)):
-            if type(googleNotes[index]) == gkeepapi.node.List:
+            if str(type(googleNotes[index])) == "<class 'gkeepapi.node.List'>":
                 uncheckedList = googleNotes[index].unchecked
                 noteTitle = googleNotes[index].title
                 for i in range(len(uncheckedList)):
@@ -41,7 +46,7 @@ class KeepGrid:
 
         return noteList
 
-    def addListBorder(self, nestedList):
+    def _addListBorder(self, nestedList):
         """Returns: a ragged list with ASCII borders. The nested lists will have borders.
         Precondition: list is a nested list and all items in the nested list are strings"""
 
@@ -67,74 +72,88 @@ class KeepGrid:
             nestedList[index].append(bottomBorder)
         return nestedList
 
-    def printRow(self, nestedList, startPos):
-        maxNestedListLength = max(len(i) for i in nestedList)
-        nestedListItemWidthAccumulator = 0
+    def printRow(self, startPos):
+        """Prints a single row of googleNotes. All notes are centered and the amount
+        varies depending on the terminal width. It is not responsive to adjusting width
+        during use. Uses helper methods: listifyGoogleNotes() and addListBorder()"""
+
+        noteList = self._listifyGoogleNotes(self.googleNotes)
+
+        noteList = self._addListBorder(noteList)
+        
+        maxNoteListLength = max(len(i) for i in noteList)
+        noteListItemWidthAccumulator = 0
         foundColumnCount = False
-        global columnCount
-        rowPosition = range(len(nestedList))
+
+        rowPosition = range(len(noteList))
 
         for index in rowPosition[startPos:]:
             # add empty spaces below
-            nestedListItem = nestedList[index]
-            noteWidth = max(len(s) for s in nestedListItem)
-            nestedListItemWidthAccumulator += noteWidth
-            if nestedListItemWidthAccumulator > width-5 and not foundColumnCount:
-                columnCount = (nestedList.index(nestedList[index-1]))
+            noteListItem = noteList[index]
+            noteWidth = max(len(s) for s in noteListItem)
+            noteListItemWidthAccumulator += noteWidth
+            if noteListItemWidthAccumulator > (self.termWidth-20) and not foundColumnCount:
+                columnCount = (noteList.index(noteList[index-1]))
                 foundColumnCount = True
 
-            elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
-                columnCount = (nestedList.index(nestedList[index-1]))
+            elif index == max(rowPosition[startPos:]) and not foundColumnCount and noteListItemWidthAccumulator < self.termWidth:
+                columnCount = (noteList.index(noteList[index-1]))
                 foundColumnCount = True
 
 
         if (columnCount+1) == startPos:
-            maxNestedListLength = len(nestedList[columnCount+1])
+            maxNoteListLength = len(noteList[columnCount+1])
         else:
-            maxNestedListLength = max(len(i) for i in nestedList[startPos:columnCount+1])
+            maxNoteListLength = max(len(i) for i in noteList[startPos:columnCount+1])
 
         for index in rowPosition[startPos:]:
-            nestedListItem = nestedList[index]
-            noteWidth = max(len(s) for s in nestedListItem)
-            for i in range(len(nestedListItem)):
-                if len(nestedListItem) < maxNestedListLength:
-                    for x in range(maxNestedListLength-len(nestedListItem)):
-                        nestedListItem.append(' ' * noteWidth)
+            noteListItem = noteList[index]
+            noteWidth = max(len(s) for s in noteListItem)
+            for i in range(len(noteListItem)):
+                if len(noteListItem) < maxNoteListLength:
+                    for x in range(maxNoteListLength-len(noteListItem)):
+                        noteListItem.append(' ' * noteWidth)
 
         if (columnCount+1) == startPos:
-            nestedListFormatted = nestedList[columnCount+1]
+            noteListFormatted = noteList[columnCount+1]
         else:
-            nestedListRow = nestedList[startPos:columnCount+1]
+            noteListRow = noteList[startPos:columnCount+1]
 
-            nestedListFormatted = zip(*nestedListRow)
+            noteListFormatted = zip(*noteListRow)
 
-            nestedListFormatted = list(nestedListFormatted)
+            noteListFormatted = list(noteListFormatted)
 
         # Center Notes
-        centerSpaceIterator = abs((width - len(str(nestedListFormatted[0])))//2)+1
+        centerSpaceIterator = round(abs((self.termWidth - len(re.sub("['',()]", '', str(noteListFormatted[0])).strip('[]')))/2))
         centerSpace = ''
 
         for i in range(centerSpaceIterator):
             centerSpace += ' '
 
         if (columnCount+1) == startPos:
-            nestedListFormatted = nestedList[columnCount+1]
-            for index in range(len(nestedListFormatted)):
-                nestedListFormatted[index] = centerSpace + nestedListFormatted[index]
+            noteListFormatted = noteList[columnCount+1]
+            for index in range(len(noteListFormatted)):
+                noteListFormatted[index] = centerSpace + noteListFormatted[index]
 
-            for i in range(len(nestedListFormatted)):
+            for i in range(len(noteListFormatted)):
                 sys.stdout.write('\u001b[0;33m')
                 if i == 1:
                     sys.stdout.write('\u001b[1;33m')
-                print(nestedListFormatted[i])
+                print(noteListFormatted[i])
 
         else:
-            for index in range(len(nestedListFormatted)):
-                nestedListFormatted[index] = list(nestedListFormatted[index])
-                nestedListFormatted[index][0] = centerSpace + nestedListFormatted[index][0]
+            for index in range(len(noteListFormatted)):
+                noteListFormatted[index] = list(noteListFormatted[index])
+                noteListFormatted[index][0] = centerSpace + noteListFormatted[index][0]
 
-            for i in range(len(nestedListFormatted)):
+            for i in range(len(noteListFormatted)):
                 sys.stdout.write('\u001b[0;33m')
                 if i == 1:
                     sys.stdout.write('\u001b[1;33m')
-                print(re.sub("['',()]", '', str(nestedListFormatted[i])).strip('[]'))
+                print(re.sub("['',()]", '', str(noteListFormatted[i])).strip('[]'))
+
+    def getColumnCount(self):
+        return columnCount
+
+    def printKeepGrid():
+        pass
