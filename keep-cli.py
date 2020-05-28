@@ -113,7 +113,7 @@ def wrapText(nestedList):
                 for a in range(len(wrappedTextList)):
                     nestedList[index].insert(i+(a), wrappedTextList[a])
                 nestedList[index].remove(str(unwrappedText))
-    
+
     return nestedList
 
 
@@ -156,7 +156,7 @@ def printGrid(nestedList, startPos=0):
     # ------ Find columnEndPos ------
     for index in rowPosition[startPos:]:
         nestedListItem = nestedList[index]
-        
+
         noteWidth = max(len(s) for s in nestedListItem)
         nestedListItemWidthAccumulator += noteWidth
         if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
@@ -202,16 +202,12 @@ def printGrid(nestedList, startPos=0):
         sys.stdout.write('\u001b[0;33m')
         if i == 1:
             sys.stdout.write('\u001b[1;33m')
-        stringLine = ''.join(nestedListFormatted[i]) 
+        stringLine = ''.join(nestedListFormatted[i])
         print((centerSpaceCount * ' '), stringLine)
 
     while continuePrintingRow:
         printGrid(nestedList, columnEndPos+1)
 
-def filterTitles(inputString, inputList):
-    if inputString in inputList:
-        return True
-    return False
 
 def noteView():
     """Displays the notes from your Google Keep account in a grid view with borders."""
@@ -219,13 +215,21 @@ def noteView():
 
     noteGrid = KeepGrid(googleNotes, width)
 
+    os.system('clear')
+    sys.stdout.write('\033[1;33m')
+    sys.stdout.write(fig.renderText('Keep...'))
+
     # ------ Using Methods ------
+
+    global continuePrintingRow
+
     noteList = listifyGoogleNotes(googleNotes)
     noteList = wrapText(noteList)
     noteList = addListBorder(noteList)
 
     printGrid(noteList)
-    
+    continuePrintingRow = True
+
     initialPrompt = [
     {
         'type': 'list',
@@ -235,20 +239,32 @@ def noteView():
     }]
     initialSelection = prompt(initialPrompt)
 
+    if initialSelection.get('options') == 'Edit a Note':
+        editNote(noteList)
+
+
+def editNote(noteList):
+    global continuePrintingRow
+
     titleList = []
     for i in range(len(noteList)):
         titleList.append(re.sub("[│]", '', str(noteList[i][1])).rstrip(' ').lstrip(' '))
-    
-    if initialSelection.get('options') == 'Edit a Note':
-        listPrompt = [
-        {
-            'type': 'list',
-            'name': 'options',
-            'message': 'Please pick an option:',
-            'choices': titleList
-        }]
-    
+
+    titleList.append('⏎ Go Back ⏎')
+
+    listPrompt = [
+    {
+        'type': 'list',
+        'name': 'options',
+        'message': 'Please pick an note to edit:',
+        'choices': titleList
+    }]
+
     listSelection = prompt(listPrompt)
+
+    if listSelection.get('options') == '⏎ Go Back ⏎':
+        noteView()
+
     notes = []
     for i in range(len(noteList)):
         for index in range(len(noteList[i])):
@@ -256,7 +272,7 @@ def noteView():
             titleString = ''
             for y in range(len(title)):
                 titleString += title[y]
-            
+
             if titleString != '':
                 notes.append(titleString)
 
@@ -265,35 +281,55 @@ def noteView():
     for index in range(len(noteList)):
         for i in range(len(noteList[index])):
             try:
-                test = noteList[i][1].index(notes[0])
+                testNoteExistence = noteList[i][index].index(notes[0])
                 noteToEdit.append(noteList[i])
-                print(noteList[i][1].index(notes[0]))
                 indexOfNoteToDelete = i
             except:
                 pass
-            #noteToEdit.append(noteList[i])
+
+    deleteWhiteSpace = False
+
+    noteToEditAccumulator = []
+
+    for note in range(len(noteToEdit)):
+        for item in range(len(noteToEdit[note])):
+            if deleteWhiteSpace == False:
+                noteToEditAccumulator.append(noteToEdit[note][item])
+                if '┘' in noteToEdit[note][item]:
+                    deleteWhiteSpace = True
+            else:
+                pass
+
+    noteToEdit = []
+    noteToEdit.append(noteToEditAccumulator)
+
     os.system('clear')
     sys.stdout.write('\033[1;33m')
     sys.stdout.write(fig.renderText('keep...'))
     printGrid(noteToEdit)
+    continuePrintingRow = True
+
     editOptions = [
         {
             'type': 'list',
             'name': 'options',
             'message': 'What would you like to do to this note?',
-            'choices': ['Delete this Note', 'Edit the title of this Note', 'Edit the body of this Note']
+            'choices': ['Delete this Note ⌫', 'Edit the title of this Note ✎', 'Edit the body of this Note ✎', '⏎ Go Back ⏎']
         }]
-    
+
     listSelection = prompt(editOptions)
 
-    if listSelection.get('options') == 'Delete this Note':
+    if listSelection.get('options') == 'Delete this Note ⌫':
         noteToDelete = googleNotes[indexOfNoteToDelete]
-        noteToDelete.trash()
+        noteToDelete.delete()
         keep.sync()
         noteView()
-    else:
-        print('hi')
-    
+    elif  listSelection.get('options') == 'Edit the title of this Note ✎':
+        pass
+    elif listSelection.get('options') == 'Edit the body of this Note ✎':
+        pass
+    elif listSelection.get('options') == '⏎ Go Back ⏎':
+        noteView()
 
 
 def login():
