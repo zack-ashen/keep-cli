@@ -22,7 +22,7 @@ from KeepGrid import KeepGrid
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
-password = 'nldhilyhirqxrofl'
+password = 'orghhdaqedhypamu'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -33,8 +33,9 @@ width = columns
 columnEndPos = 0
 continuePrintingRow = True
 
-
 keep = gkeepapi.Keep()
+
+fig = Figlet(font='larry3d', justify='center', width=width)
 
 
 def main():
@@ -56,7 +57,7 @@ def main():
 
         sys.stdout.write('\033[21;93m')
 
-        displayAllNotes()
+        noteView()
 
 
 def listifyGoogleNotes(googleNotes):
@@ -119,8 +120,6 @@ def wrapText(nestedList):
 def addListBorder(nestedList):
     """Returns: a ragged list with ASCII borders. The nested lists will have borders.
     Precondition: list is a nested list and all items in the nested list are strings"""
-
-
     for index in range(len(nestedList)):
         listItem = nestedList[index]
         borderWidth = max(len(s) for s in listItem)
@@ -143,8 +142,8 @@ def addListBorder(nestedList):
         nestedList[index].append(bottomBorder)
     return nestedList
 
-# possibly use printRow recursion to printgrid
-def printRow(nestedList, startPos):
+
+def printGrid(nestedList, startPos=0):
     maxNestedListLength = max(len(i) for i in nestedList)
     nestedListItemWidthAccumulator = 0
     foundColumnCount = False
@@ -159,9 +158,7 @@ def printRow(nestedList, startPos):
         nestedListItem = nestedList[index]
         
         noteWidth = max(len(s) for s in nestedListItem)
-        #print(width, noteWidth)
         nestedListItemWidthAccumulator += noteWidth
-        #print('accumulator: ', nestedListItemWidthAccumulator)
         if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
             columnEndPos = (nestedList.index(nestedList[index-1]))
             foundColumnCount = True
@@ -198,80 +195,109 @@ def printRow(nestedList, startPos):
 
         nestedListFormatted = list(nestedListFormatted)
 
-    # Center Notes
+    # ------ Center Notes ------
     centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
 
-    #if (columnEndPos+1) == startPos:
-    #    continuePrintingRow = False
-    #    nestedListFormatted = nestedList[columnEndPos+1]
-    #
-    #    for i in range(len(nestedListFormatted)):
-    #        sys.stdout.write('\u001b[0;33m')
-    #        if i == 1:
-    #            sys.stdout.write('\u001b[1;33m')
-    #        print((centerSpaceCount * ' '), nestedListFormatted[i])
-    #elif columnEndPos == len(nestedList):
-    #    for i in range(len(nestedListFormatted)):
-    #        sys.stdout.write('\u001b[0;33m')
-    #        if i == 1:
-    #            sys.stdout.write('\u001b[1;33m')
-    #        #print((centerSpaceCount * ' '), re.sub("['',()]", 'a', str(nestedListFormatted[i])).strip('[]'))
-    #        stringLine = ''.join(nestedListFormatted[i]) 
-    #        print((centerSpaceCount * ' '), stringLine)
-    #else:
     for i in range(len(nestedListFormatted)):
         sys.stdout.write('\u001b[0;33m')
         if i == 1:
             sys.stdout.write('\u001b[1;33m')
-        #print((centerSpaceCount * ' '), re.sub("['',()]", 'a', str(nestedListFormatted[i])).strip('[]'))
         stringLine = ''.join(nestedListFormatted[i]) 
         print((centerSpaceCount * ' '), stringLine)
 
+    while continuePrintingRow:
+        printGrid(nestedList, columnEndPos+1)
 
-def displayAllNotes():
+def filterTitles(inputString, inputList):
+    if inputString in inputList:
+        return True
+    return False
+
+def noteView():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
 
     noteGrid = KeepGrid(googleNotes, width)
 
-    #noteGrid.printRow(0)
-    
+    # ------ Using Methods ------
     noteList = listifyGoogleNotes(googleNotes)
-
     noteList = wrapText(noteList)
-
     noteList = addListBorder(noteList)
-    #print(noteList)
+
+    printGrid(noteList)
     
-    #for i in range(len(noteList[5])):
-    #   print(noteList[5][i])
+    initialPrompt = [
+    {
+        'type': 'list',
+        'name': 'options',
+        'message': 'Please a Note Title to Edit:',
+        'choices': ['Make a New Note', 'Make a New List', 'Edit a Note']
+    }]
+    initialSelection = prompt(initialPrompt)
 
-    #print(noteList[5])
+    titleList = []
+    for i in range(len(noteList)):
+        titleList.append(re.sub("[│]", '', str(noteList[i][1])).rstrip(' ').lstrip(' '))
+    
+    if initialSelection.get('options') == 'Edit a Note':
+        listPrompt = [
+        {
+            'type': 'list',
+            'name': 'options',
+            'message': 'Please pick an option:',
+            'choices': titleList
+        }]
+    
+    listSelection = prompt(listPrompt)
+    notes = []
+    for i in range(len(noteList)):
+        for index in range(len(noteList[i])):
+            title = list(filter(lambda x: listSelection.get('options') in noteList[i][index], noteList[i][index]))
+            titleString = ''
+            for y in range(len(title)):
+                titleString += title[y]
+            
+            if titleString != '':
+                notes.append(titleString)
 
-    # Find Amount of Notes in a Column (Column Count)
+    noteToEdit = []
 
-    printRow(noteList, 0)
+    for index in range(len(noteList)):
+        for i in range(len(noteList[index])):
+            try:
+                test = noteList[i][1].index(notes[0])
+                noteToEdit.append(noteList[i])
+                print(noteList[i][1].index(notes[0]))
+                indexOfNoteToDelete = i
+            except:
+                pass
+            #noteToEdit.append(noteList[i])
+    os.system('clear')
+    sys.stdout.write('\033[1;33m')
+    sys.stdout.write(fig.renderText('keep...'))
+    printGrid(noteToEdit)
+    editOptions = [
+        {
+            'type': 'list',
+            'name': 'options',
+            'message': 'What would you like to do to this note?',
+            'choices': ['Delete this Note', 'Edit the title of this Note', 'Edit the body of this Note']
+        }]
+    
+    listSelection = prompt(editOptions)
 
-    #noteGrid.printRow(0)
-
-    while continuePrintingRow:
-        #print(columnEndPos)
-        printRow(noteList, columnEndPos+1)
-
-    #print(columnEndPos)
-
-    #printRow(noteList, 5)
-
-    #i = columnEndPos + 1
-    #oldColumnCount = 1
-    #while len(noteList) >= columnEndPos + 2:
-    #    if oldColumnCount == columnEndPos:
-    #        break
+    if listSelection.get('options') == 'Delete this Note':
+        noteToDelete = googleNotes[indexOfNoteToDelete]
+        noteToDelete.trash()
+        keep.sync()
+        noteView()
+    else:
+        print('hi')
+    
 
 
 def login():
     """Prompts the user to login and logs them in."""
-
     sys.stdout.write('\033[21;93m')
     sys.stdout.write('Please Login: \n \n')
     login = [
@@ -298,14 +324,12 @@ def login():
         print("Your login credentials were incorrect!\n")
         return
 
-
-    displayAllNotes()
+    noteView()
 
 
 def animateWelcomeText():
     """Animates the welcome keepd text in ASCII font and welcome paragraph."""
 
-    fig = Figlet(font='larry3d', justify='center', width=width)
     welcomeText = 'keepd...'
 
     text = ''
