@@ -1,0 +1,342 @@
+#!/usr/bin/env python3
+
+"""
+Keep-CLI
+Author: Zachary Ashen
+Date: May 15th 2020
+Description: A CLI version of Google Keep which is a
+note taking/list making website developed by Google.
+Contact: zachary.h.a@gmail.com
+"""
+
+from __future__ import print_function, unicode_literals
+import gkeepapi
+from pyfiglet import Figlet
+import sys
+from time import sleep
+import os
+from textwrap import fill
+import re
+from PyInquirer import prompt, print_json
+from KeepGrid import KeepGrid
+
+# Enter your credentials here to save them
+username = 'zachary.h.a@gmail.com'
+password = 'nldhilyhirqxrofl'
+
+#username = 'example@gmail.com'
+#password = 'password'
+
+columns, rows = os.get_terminal_size(0)
+width = columns
+
+columnEndPos = 0
+continuePrintingRow = True
+
+
+keep = gkeepapi.Keep()
+
+
+def main():
+    animateWelcomeText()
+    if username=='example@gmail.com' and password=='password':
+        login()
+    else:
+        # If user has already entered login info then display notes.
+        sys.stdout.write('\033[1;32m')
+        print('Using credentials you entered in keepd.py to login...\n'.center(width))
+
+
+        try:
+            keep.login(username, password)
+        except:
+            sys.stdout.write('\u001b[31m')
+            print("Your login credentials were incorrect!\n")
+            return
+
+        sys.stdout.write('\033[21;93m')
+
+        displayAllNotes()
+
+
+def listifyGoogleNotes(googleNotes):
+    """Returns: a nested list from a Google Note object. Checked items are removed
+    from the list.
+
+    Example: Google Note object with list titled 'Foo List' and items:
+    'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
+    'Garbage in garbage out the end of this note', becomes:
+    [[["Foo List"], ["get apples"], ["pick up gorceries"]],
+    [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
+
+     Precondition: googleNote is a list containing either items of type
+     'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
+
+
+    # This is the list accumulator that recieves the parsed Google Notes
+    noteList = []
+
+    for index in range(len(googleNotes)):
+        # execute if note is a list
+        if type(googleNotes[index]) == gkeepapi.node.List:
+            # Only retrieve unchecked list items
+            uncheckedList = googleNotes[index].unchecked
+            noteTitle = googleNotes[index].title
+            # get the string text of the list and change the list item to the string
+            for i in range(len(uncheckedList)):
+                uncheckedList[i] = '□  ' + uncheckedList[i].text
+            noteList.append(uncheckedList)
+            uncheckedList.insert(0, noteTitle)
+        # execute of note is a note
+        else:
+            note = googleNotes[index]
+            noteTitle = note.title
+            note = note.text.split('\n')
+            noteList.append(note)
+            note.insert(0, noteTitle)
+    return noteList
+
+
+def wrapText(nestedList):
+    for index in range(len(nestedList)):
+        for i in range(len(nestedList[index])):
+            if len(nestedList[index][i]) > (width-25):
+
+                nestedList[index][i] = fill(nestedList[index][i], width=(width-22))
+
+                unwrappedText = nestedList[index][i]
+
+                #nestedList[index][i][width-30:width-20].split(' ')
+                wrappedTextList = nestedList[index][i].split('\n')
+                #print(wrappedTextList)
+                for a in range(len(wrappedTextList)):
+                    nestedList[index].insert(i+(a), wrappedTextList[a])
+                nestedList[index].remove(str(unwrappedText))
+    
+    return nestedList
+
+
+def addListBorder(nestedList):
+    """Returns: a ragged list with ASCII borders. The nested lists will have borders.
+    Precondition: list is a nested list and all items in the nested list are strings"""
+
+
+    for index in range(len(nestedList)):
+        listItem = nestedList[index]
+        borderWidth = max(len(s) for s in listItem)
+
+        # add top border
+        topBorder = ['┌' + '─' * borderWidth + '┐']
+        topBorder = re.sub("['',]", '', str(topBorder)).strip('[]')
+        nestedList[index].insert(0, topBorder)
+
+        # iterate over middle lines and add border there
+        for i in range(len(listItem)):
+            if i == 1:
+                listItem[i] = '│' + (' ' * ((borderWidth-len(listItem[i]))//2)) + (listItem[i] + ' ' * ((1+borderWidth-len(listItem[i]))//2))[:borderWidth] + '│'
+            elif i >= 2:
+                listItem[i] = '│' + (listItem[i] + ' ' * borderWidth)[:borderWidth] + '│'
+
+        # add bottom border
+        bottomBorder = ['└' + '─' * borderWidth + '┘']
+        bottomBorder = re.sub("['',]", '', str(bottomBorder)).strip('[]')
+        nestedList[index].append(bottomBorder)
+    return nestedList
+
+# possibly use printRow recursion to printgrid
+def printRow(nestedList, startPos):
+    maxNestedListLength = max(len(i) for i in nestedList)
+    nestedListItemWidthAccumulator = 0
+    foundColumnCount = False
+
+    global columnEndPos
+    global continuePrintingRow
+
+    rowPosition = range(len(nestedList))
+
+    # ------ Find columnEndPos ------
+    for index in rowPosition[startPos:]:
+        nestedListItem = nestedList[index]
+        
+        noteWidth = max(len(s) for s in nestedListItem)
+        #print(width, noteWidth)
+        nestedListItemWidthAccumulator += noteWidth
+        #print('accumulator: ', nestedListItemWidthAccumulator)
+        if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
+            columnEndPos = (nestedList.index(nestedList[index-1]))
+            foundColumnCount = True
+        elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
+            columnEndPos = len(nestedList)
+            continuePrintingRow = False
+            foundColumnCount = True
+    # ------ End Find columnEndPos ------
+
+    # ------ Add spaces below note to make rectangular row of characters ------
+    if columnEndPos == startPos:
+        maxNestedListLength = len(nestedList[columnEndPos])
+    elif columnEndPos == len(nestedList):
+        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos])
+    else:
+        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos+1])
+
+    for index in rowPosition[startPos:columnEndPos+1]:
+        nestedListItem = nestedList[index]
+        noteWidth = max(len(s) for s in nestedListItem)
+        for i in range(len(nestedListItem)):
+            if len(nestedListItem) < maxNestedListLength:
+                for x in range(maxNestedListLength-len(nestedListItem)):
+                    nestedListItem.append(' ' * noteWidth)
+    # ------ End add spaces below note to make rectangular row of characters ------
+
+
+    if (columnEndPos+1) == startPos:
+        nestedListFormatted = nestedList[columnEndPos+1]
+    else:
+        nestedListRow = nestedList[startPos:columnEndPos+1]
+
+        nestedListFormatted = zip(*nestedListRow)
+
+        nestedListFormatted = list(nestedListFormatted)
+
+    # Center Notes
+    centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
+
+    #if (columnEndPos+1) == startPos:
+    #    continuePrintingRow = False
+    #    nestedListFormatted = nestedList[columnEndPos+1]
+    #
+    #    for i in range(len(nestedListFormatted)):
+    #        sys.stdout.write('\u001b[0;33m')
+    #        if i == 1:
+    #            sys.stdout.write('\u001b[1;33m')
+    #        print((centerSpaceCount * ' '), nestedListFormatted[i])
+    #elif columnEndPos == len(nestedList):
+    #    for i in range(len(nestedListFormatted)):
+    #        sys.stdout.write('\u001b[0;33m')
+    #        if i == 1:
+    #            sys.stdout.write('\u001b[1;33m')
+    #        #print((centerSpaceCount * ' '), re.sub("['',()]", 'a', str(nestedListFormatted[i])).strip('[]'))
+    #        stringLine = ''.join(nestedListFormatted[i]) 
+    #        print((centerSpaceCount * ' '), stringLine)
+    #else:
+    for i in range(len(nestedListFormatted)):
+        sys.stdout.write('\u001b[0;33m')
+        if i == 1:
+            sys.stdout.write('\u001b[1;33m')
+        #print((centerSpaceCount * ' '), re.sub("['',()]", 'a', str(nestedListFormatted[i])).strip('[]'))
+        stringLine = ''.join(nestedListFormatted[i]) 
+        print((centerSpaceCount * ' '), stringLine)
+
+
+def displayAllNotes():
+    """Displays the notes from your Google Keep account in a grid view with borders."""
+    googleNotes = keep.all()
+
+    noteGrid = KeepGrid(googleNotes, width)
+
+    #noteGrid.printRow(0)
+    
+    noteList = listifyGoogleNotes(googleNotes)
+
+    noteList = wrapText(noteList)
+
+    noteList = addListBorder(noteList)
+    #print(noteList)
+    
+    #for i in range(len(noteList[5])):
+    #   print(noteList[5][i])
+
+    #print(noteList[5])
+
+    # Find Amount of Notes in a Column (Column Count)
+
+    printRow(noteList, 0)
+
+    #noteGrid.printRow(0)
+
+    while continuePrintingRow:
+        #print(columnEndPos)
+        printRow(noteList, columnEndPos+1)
+
+    #print(columnEndPos)
+
+    #printRow(noteList, 5)
+
+    #i = columnEndPos + 1
+    #oldColumnCount = 1
+    #while len(noteList) >= columnEndPos + 2:
+    #    if oldColumnCount == columnEndPos:
+    #        break
+
+
+def login():
+    """Prompts the user to login and logs them in."""
+
+    sys.stdout.write('\033[21;93m')
+    sys.stdout.write('Please Login: \n \n')
+    login = [
+    {
+        'type': 'input',
+        'name': 'username',
+        'message': 'Please enter your username:',
+    },
+    {
+        'type': 'password',
+        'name': 'password',
+        'message': 'Please enter your password:',
+    }]
+
+    loginCredentials = prompt(login)
+
+    username = loginCredentials['username']
+    password = loginCredentials['password']
+
+    try:
+        keep.login(username, password)
+    except:
+        sys.stdout.write('\u001b[31m')
+        print("Your login credentials were incorrect!\n")
+        return
+
+
+    displayAllNotes()
+
+
+def animateWelcomeText():
+    """Animates the welcome keepd text in ASCII font and welcome paragraph."""
+
+    fig = Figlet(font='larry3d', justify='center', width=width)
+    welcomeText = 'keepd...'
+
+    text = ''
+
+    for x in welcomeText:
+        os.system('clear')
+        text += x
+        sys.stdout.write('\033[1;33m')
+        sys.stdout.write(fig.renderText(text))
+        sleep(0.1)
+
+    sys.stdout.write('\n')
+
+    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keepd. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
+
+    paragraphStrings = []
+
+    if width < 100:
+        print(paragraphText)
+    else:
+        paragraphText = str(fill(paragraphText, width/2))
+        paragraphTextList = paragraphText.split('\n')
+        for index in range(len(paragraphTextList)):
+            print(paragraphTextList[index].center(width))
+        print('\n')
+
+        line = ''
+        for index in range(width):
+            line += '─'
+        print(line)
+
+
+if __name__ == '__main__':
+    main()
