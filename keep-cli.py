@@ -143,6 +143,17 @@ def addListBorder(nestedList):
     return nestedList
 
 
+def removeListBorder(nestedList):
+    for index in range(len(nestedList)):
+        nestedList[index].pop(0)
+        nestedList[index].pop(len(nestedList[index])-1)
+
+    for index in range(len(nestedList)):
+        for i in range(len(nestedList[index])):
+            nestedList[index][i] = re.sub("[│]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
+    return nestedList
+
+
 def printGrid(nestedList, startPos=0):
     maxNestedListLength = max(len(i) for i in nestedList)
     nestedListItemWidthAccumulator = 0
@@ -239,11 +250,76 @@ def noteView():
     }]
     initialSelection = prompt(initialPrompt)
 
-    if initialSelection.get('options') == 'Edit a Note':
-        editNote(noteList)
+    if initialSelection.get('options') == 'Make a New Note':
+        makeANote(noteList)
+    elif initialSelection.get('options') == 'Make a New List':
+        makeAList(noteList)
+    elif initialSelection.get('options') == 'Edit a Note':
+        editNote(noteList, googleNotes)
 
 
-def editNote(noteList):
+def makeAList(noteList):
+    listTitlePrompt = [
+    {
+        'type': 'input',
+        'name': 'noteTitle',
+        'message': 'What should the title of the list be?',
+    }]
+
+    listTitleAnswer = prompt(listTitlePrompt)
+
+    listTitle = listTitleAnswer.get('noteTitle')
+
+    listFinished = False
+    listItems = []
+    while listFinished == False:
+        addListItem = [
+        {
+            'type': 'input',
+            'name': 'listItem',
+            'message': 'Add a list item (Enter \'-\' to finish):',
+        }]
+
+        listItemAnswer = prompt(addListItem)
+
+        listItem = (listItemAnswer.get('listItem'), False)
+
+        listItems.append(listItem)
+
+        if listItemAnswer.get('listItem') == '-':
+            listItems.pop(len(listItems)-1)
+            listFinished = True
+
+    gnote = keep.createList(listTitle, listItems)
+    keep.sync()
+    noteView()
+
+
+def makeANote(noteList):
+    noteTitlePrompt = [
+    {
+        'type': 'input',
+        'name': 'noteTitle',
+        'message': 'What should the title of the note be?',
+    }]
+
+    noteTitleAnswer = prompt(noteTitlePrompt)
+
+    noteTitle = noteTitleAnswer.get('noteTitle')
+
+    os.system('$EDITOR ' + noteTitle)
+
+    with open(noteTitle, 'r') as file:
+        noteText = file.read()
+
+    os.system('rm ' + noteTitle)
+
+    gnote = keep.createNote(noteTitle, noteText)
+    keep.sync()
+    noteView()
+
+
+def editNote(noteList, googleNotes):
     global continuePrintingRow
 
     titleList = []
@@ -283,7 +359,7 @@ def editNote(noteList):
             try:
                 testNoteExistence = noteList[i][index].index(notes[0])
                 noteToEdit.append(noteList[i])
-                indexOfNoteToDelete = i
+                indexOfNote = i
             except:
                 pass
 
@@ -302,31 +378,65 @@ def editNote(noteList):
 
     noteToEdit = []
     noteToEdit.append(noteToEditAccumulator)
+    noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
+def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     os.system('clear')
     sys.stdout.write('\033[1;33m')
     sys.stdout.write(fig.renderText('keep...'))
+
     printGrid(noteToEdit)
+    global continuePrintingRow
     continuePrintingRow = True
+
+    if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
+        choices = ['Edit the title of this Note ✎', 'Edit the items of this list ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
+    else:
+        choices = ['Edit the title of this Note ✎', 'Edit the body of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
 
     editOptions = [
         {
             'type': 'list',
             'name': 'options',
             'message': 'What would you like to do to this note?',
-            'choices': ['Delete this Note ⌫', 'Edit the title of this Note ✎', 'Edit the body of this Note ✎', '⏎ Go Back ⏎']
+            'choices': choices
         }]
 
     listSelection = prompt(editOptions)
 
-    if listSelection.get('options') == 'Delete this Note ⌫':
-        noteToDelete = googleNotes[indexOfNoteToDelete]
+    if listSelection.get('options') == 'Delete this note ⌫':
+        noteToDelete = googleNotes[indexOfNote]
         noteToDelete.delete()
         keep.sync()
         noteView()
-    elif  listSelection.get('options') == 'Edit the title of this Note ✎':
+    elif listSelection.get('options') == 'Edit the title of this note ✎':
+        newTitlePrompt = [
+        {
+            'type': 'input',
+            'name': 'noteTitle',
+            'message': 'What should the title of the note be?',
+        }]
+
+        newTitleAnswer = prompt(newTitlePrompt)
+
+        newTitle = newTitleAnswer.get('noteTitle')
+
+        gnote = googleNotes[indexOfNote]
+        gnote.title = newTitle
+
+        keep.sync()
+
+        borderWidth = len(noteToEdit[0][1])
+        noteToEdit[0][1] = newTitle
+
+        noteToEdit = removeListBorder(noteToEdit)
+        noteToEdit = addListBorder(noteToEdit)
+
+        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+
+    elif listSelection.get('options') == 'Edit the body of this note ✎':
         pass
-    elif listSelection.get('options') == 'Edit the body of this Note ✎':
+    elif listSelection.get('options') == 'Edit the items of this list ✎':
         pass
     elif listSelection.get('options') == '⏎ Go Back ⏎':
         noteView()
