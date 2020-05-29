@@ -9,16 +9,17 @@ note taking/list making website developed by Google.
 Contact: zachary.h.a@gmail.com
 """
 
-from __future__ import print_function, unicode_literals
+#from __future__ import print_function, unicode_literals
 import gkeepapi
 from pyfiglet import Figlet
-import sys
+import sys # can get rid of this -- replace sys.stdout with print
 from time import sleep
 import os
 from textwrap import fill
 import re
 from PyInquirer import prompt, print_json
 from KeepGrid import KeepGrid
+import argparse
 
 # Enter your credentials here to save them
 username = 'zachary.h.a@gmail.com'
@@ -255,7 +256,7 @@ def noteView():
     elif initialSelection.get('options') == 'Make a New List':
         makeAList(noteList)
     elif initialSelection.get('options') == 'Edit a Note':
-        editNote(noteList, googleNotes)
+        editNoteSelector(noteList, googleNotes)
 
 
 def makeAList(noteList):
@@ -307,19 +308,19 @@ def makeANote(noteList):
 
     noteTitle = noteTitleAnswer.get('noteTitle')
 
-    os.system('$EDITOR ' + noteTitle)
+    os.system('$EDITOR note')
 
-    with open(noteTitle, 'r') as file:
+    with open('note', 'r') as file:
         noteText = file.read()
 
-    os.system('rm ' + noteTitle)
+    os.system('rm note')
 
     gnote = keep.createNote(noteTitle, noteText)
     keep.sync()
     noteView()
 
 
-def editNote(noteList, googleNotes):
+def editNoteSelector(noteList, googleNotes):
     global continuePrintingRow
 
     titleList = []
@@ -380,6 +381,7 @@ def editNote(noteList, googleNotes):
     noteToEdit.append(noteToEditAccumulator)
     noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
+
 def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     os.system('clear')
     sys.stdout.write('\033[1;33m')
@@ -388,6 +390,10 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     printGrid(noteToEdit)
     global continuePrintingRow
     continuePrintingRow = True
+
+
+
+    gnote = googleNotes[indexOfNote]
 
     if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
         choices = ['Edit the title of this Note ✎', 'Edit the items of this list ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
@@ -421,7 +427,6 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         newTitle = newTitleAnswer.get('noteTitle')
 
-        gnote = googleNotes[indexOfNote]
         gnote.title = newTitle
 
         keep.sync()
@@ -435,7 +440,23 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
     elif listSelection.get('options') == 'Edit the body of this note ✎':
-        pass
+        noteTitle = gnote.title
+        os.system('touch note')
+
+        noteBodyFile = open('note', "w")
+        textBody = noteBodyFile.write(gnote.text)
+        noteBodyFile.close()
+
+        os.system('$EDITOR note')
+
+        with open('note', 'r') as file:
+            noteText = file.read()
+
+        os.system('rm ' + 'note')
+
+        gnote.text = noteText
+        keep.sync()
+        noteView()
     elif listSelection.get('options') == 'Edit the items of this list ✎':
         pass
     elif listSelection.get('options') == '⏎ Go Back ⏎':
@@ -507,6 +528,8 @@ def animateWelcomeText():
             line += '─'
         print(line)
 
+def addArguments():
+    pass
 
 if __name__ == '__main__':
     main()
