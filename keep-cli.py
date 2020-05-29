@@ -61,6 +61,10 @@ def main():
         noteView()
 
 
+def listToDict(lst): 
+    res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)} 
+    return res_dct 
+
 def listifyGoogleNotes(googleNotes):
     """Returns: a nested list from a Google Note object. Checked items are removed
     from the list.
@@ -396,9 +400,9 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     gnote = googleNotes[indexOfNote]
 
     if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
-        choices = ['Edit the title of this Note ✎', 'Edit the items of this list ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
+        choices = ['Check the items of this list ✎', 'Edit the items of this list ✎', 'Edit the title of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
     else:
-        choices = ['Edit the title of this Note ✎', 'Edit the body of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
+        choices = ['Edit the title of this note ✎', 'Edit the body of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
 
     editOptions = [
         {
@@ -410,6 +414,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
     listSelection = prompt(editOptions)
 
+
+    # LOOK AT THESE FOR REPEATED CODE (CONVERT TO METHODS)
     if listSelection.get('options') == 'Delete this note ⌫':
         noteToDelete = googleNotes[indexOfNote]
         noteToDelete.delete()
@@ -438,9 +444,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         noteToEdit = addListBorder(noteToEdit)
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-
     elif listSelection.get('options') == 'Edit the body of this note ✎':
-        noteTitle = gnote.title
         os.system('touch note')
 
         noteBodyFile = open('note', "w")
@@ -458,9 +462,58 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         keep.sync()
         noteView()
     elif listSelection.get('options') == 'Edit the items of this list ✎':
-        pass
-    elif listSelection.get('options') == '⏎ Go Back ⏎':
-        noteView()
+        itemList = []
+        for index in range(len(noteList[indexOfNote])):
+            if index > 1 and index < (len(noteList[indexOfNote])-1):
+                itemList.append(re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' '))
+        itemToEdit = [
+        {
+            'type': 'list',
+            'name': 'item',
+            'message': 'Please select a list item to edit:',
+            'choices': itemList
+        }]
+
+        itemToEditAnswer = prompt(itemToEdit)
+
+        glistitem = gnote.unchecked[itemList.index(itemToEditAnswer.get('item'))]
+
+        editItemPrompt = [{
+            'type':'input',
+            'name':'itemEdited',
+            'message': 'Edit the item:',
+            'default': glistitem.text
+        }]
+
+        editItemAnswer = prompt(editItemPrompt)
+
+        glistitem.text = editItemAnswer.get('itemEdited')
+        keep.sync()
+        googleNotes = keep.all()
+        noteList = listifyGoogleNotes(googleNotes)
+        noteList = addListBorder(noteList)
+        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+
+    elif listSelection.get('options') == 'Check the items of this list ✎':
+        # Select list item to edit ==> options: check or uncheck, edit item
+        itemList = []
+        itemChoices = []
+        for index in range(len(noteList[indexOfNote])):
+            if index > 1 and index < (len(noteList[indexOfNote])-1):
+                itemString = re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' ')
+                itemDict = dict.fromkeys([itemString], 'name')
+                itemDictInverted = dict(map(reversed, itemDict.items()))
+                itemChoices.append(itemDictInverted)
+
+        listItemsPrompt = [
+        {
+            'type': 'checkbox',
+            'name': 'options',
+            'message': 'Please pick a item to edit:',
+            'choices': itemChoices
+        }]
+
+        listItemsSelection = prompt(listItemsPrompt)
 
 
 def login():
