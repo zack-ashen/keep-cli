@@ -408,11 +408,15 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
 
     # LOOK AT THESE FOR REPEATED CODE (CONVERT TO METHODS)
+
+    #WORKING
     if listSelection.get('options') == 'Delete this note ⌫':
         noteToDelete = googleNotes[indexOfNote]
         noteToDelete.delete()
         keep.sync()
         noteView()
+
+    #INCOMPLETE: Add ability to change title for lists
     elif listSelection.get('options') == 'Edit the title of this note ✎':
         newTitlePrompt = [
         {
@@ -434,9 +438,16 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         noteToEdit = removeListBorder(noteToEdit)
 
+        if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
+            for index in range(len(noteToEdit[0])):
+                if index > 0:
+                    noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
+
         noteToEdit = addListBorder(noteToEdit)
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+
+    #WORKING
     elif listSelection.get('options') == 'Edit the body of this note ✎':
         os.system('touch note')
 
@@ -454,6 +465,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         gnote.text = noteText
         keep.sync()
         noteView()
+
+    #WORKING
     elif listSelection.get('options') == 'Edit the items of this list ✎':
         itemList = []
         for index in range(len(noteList[indexOfNote])):
@@ -499,6 +512,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
+    #INCOMPLETE
     elif listSelection.get('options') == 'Check the items of this list ✎':
         # Select list item to edit ==> options: check or uncheck, edit item
         itemList = []
@@ -520,6 +534,9 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         listItemsSelection = prompt(listItemsPrompt)
 
+    #WORKING
+    elif listSelection.get('options') == '⏎ Go Back ⏎':
+        editNoteSelector(noteList, googleNotes)
 
 def login():
     """Prompts the user to login and logs them in."""
