@@ -60,14 +60,8 @@ def main():
 
         noteView()
 
-
-def listToDict(lst): 
-    res_dct = {lst[i]: lst[i + 1] for i in range(0, len(lst), 2)} 
-    return res_dct 
-
 def listifyGoogleNotes(googleNotes):
-    """Returns: a nested list from a Google Note object. Checked items are removed
-    from the list.
+    """Returns: a nested list from a Google Note object. Checked items are   removed from the list.
 
     Example: Google Note object with list titled 'Foo List' and items:
     'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
@@ -75,8 +69,8 @@ def listifyGoogleNotes(googleNotes):
     [[["Foo List"], ["get apples"], ["pick up gorceries"]],
     [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
 
-     Precondition: googleNote is a list containing either items of type
-     'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
+    Precondition: googleNote is a list containing either items of type
+    'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
 
 
     # This is the list accumulator that recieves the parsed Google Notes
@@ -155,7 +149,7 @@ def removeListBorder(nestedList):
 
     for index in range(len(nestedList)):
         for i in range(len(nestedList[index])):
-            nestedList[index][i] = re.sub("[│]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
+            nestedList[index][i] = re.sub("[│□]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
     return nestedList
 
 
@@ -395,8 +389,6 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     global continuePrintingRow
     continuePrintingRow = True
 
-
-
     gnote = googleNotes[indexOfNote]
 
     if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
@@ -441,6 +433,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         noteToEdit[0][1] = newTitle
 
         noteToEdit = removeListBorder(noteToEdit)
+
         noteToEdit = addListBorder(noteToEdit)
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
@@ -464,7 +457,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     elif listSelection.get('options') == 'Edit the items of this list ✎':
         itemList = []
         for index in range(len(noteList[indexOfNote])):
-            if index > 1 and index < (len(noteList[indexOfNote])-1):
+            #if index > 1 and index < (len(noteList[indexOfNote])-1):
+            if '□' in noteList[indexOfNote][index]:
                 itemList.append(re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' '))
         itemToEdit = [
         {
@@ -481,17 +475,28 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         editItemPrompt = [{
             'type':'input',
             'name':'itemEdited',
-            'message': 'Edit the item:',
+            'message': 'Edit the item (Delete all text to delete item):',
             'default': glistitem.text
         }]
 
         editItemAnswer = prompt(editItemPrompt)
 
-        glistitem.text = editItemAnswer.get('itemEdited')
-        keep.sync()
-        googleNotes = keep.all()
-        noteList = listifyGoogleNotes(googleNotes)
-        noteList = addListBorder(noteList)
+        if editItemAnswer.get('itemEdited') != '':
+            glistitem.text = editItemAnswer.get('itemEdited')
+            keep.sync()
+
+            noteToEdit = removeListBorder(noteToEdit)
+            for index in range(len(noteToEdit[0])):
+                if index > 0:
+                    noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
+            noteToEdit[0][(itemList.index(itemToEditAnswer.get('item')))+1] = '□ ' + editItemAnswer.get('itemEdited')
+            noteToEdit = addListBorder(noteToEdit)
+            noteList[indexOfNote] = noteToEdit[0]
+
+        else:
+            # Add delete item
+            pass
+
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
     elif listSelection.get('options') == 'Check the items of this list ✎':
