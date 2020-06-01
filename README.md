@@ -16,8 +16,11 @@ Keep-cli is a cli Google Keep client. You can add, delete, and manage your Googl
 - [ ] Have multiple pages for viewing notes
 - [x] Add edit list items
 - [ ] Add check or uncheck list items
-- [ ] Fix notes that are really long with linebreaks
-- [ ] Clean up code
+- [x] Fix notes that are really long with line breaks
 - [ ] Add note caching for faster load times
 - [ ] Handle notes with same title
 - [ ] Add better commenting for sections and more descriptive names for methods.
+- [ ] Add ability to add items to list.
+- [ ] Add arguments to make notes and lists instead of going through options list.
+- [ ] Add a refresh notesList method.
+- [ ] Add docstrings.
