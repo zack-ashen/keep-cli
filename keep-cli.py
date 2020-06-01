@@ -416,7 +416,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         keep.sync()
         noteView()
 
-    #INCOMPLETE: Add ability to change title for lists
+    #WORKING
     elif listSelection.get('options') == 'Edit the title of this note ✎':
         newTitlePrompt = [
         {
@@ -518,7 +518,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         itemList = []
         itemChoices = []
         for index in range(len(noteList[indexOfNote])):
-            if index > 1 and index < (len(noteList[indexOfNote])-1):
+            if '□' in noteList[indexOfNote][index]:
                 itemString = re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' ')
                 itemDict = dict.fromkeys([itemString], 'name')
                 itemDictInverted = dict(map(reversed, itemDict.items()))
@@ -533,6 +533,25 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         }]
 
         listItemsSelection = prompt(listItemsPrompt)
+
+        checkedItems = listItemsSelection.get('options')
+
+        for index in range(len(checkedItems)):
+            checkedItems[index] = re.sub("[□]", '', str(checkedItems[index])).rstrip(' ').lstrip(' ')
+        noteToEdit = removeListBorder(noteToEdit)
+        for index in range(len(checkedItems)):
+            try:
+                noteToEdit[0].index(checkedItems[index])
+                googleNotes[indexOfNote].items[index].checked = True
+                keep.sync()
+            except:
+                pass
+
+        noteList = listifyGoogleNotes(googleNotes)
+        noteList = addListBorder(noteList)
+        noteToEdit[0] = noteList[indexOfNote]
+        print(noteList[indexOfNote], noteToEdit[0])
+        #noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
     #WORKING
     elif listSelection.get('options') == '⏎ Go Back ⏎':
