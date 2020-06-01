@@ -317,6 +317,9 @@ def makeANote(noteList):
     keep.sync()
     noteView()
 
+#TODO Build method
+def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
+    pass
 
 def editNoteSelector(noteList, googleNotes):
     global continuePrintingRow
@@ -466,13 +469,17 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         keep.sync()
         noteView()
 
-    #WORKING
+    #ADD ABILITY TO ADD ITEMS
     elif listSelection.get('options') == 'Edit the items of this list ✎':
         itemList = []
         for index in range(len(noteList[indexOfNote])):
             #if index > 1 and index < (len(noteList[indexOfNote])-1):
             if '□' in noteList[indexOfNote][index]:
                 itemList.append(re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' '))
+
+        itemList.append('...+ Add Item/s +')
+        itemList.append('...⏎ Go Back ⏎')
+
         itemToEdit = [
         {
             'type': 'list',
@@ -483,36 +490,69 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         itemToEditAnswer = prompt(itemToEdit)
 
-        glistitem = gnote.unchecked[itemList.index(itemToEditAnswer.get('item'))]
+        if itemToEditAnswer.get('item') == '...+ Add Item/s +':
+            listFinished = False
+            listItems = []
+            while listFinished == False:
+                addListItem = [
+                {
+                    'type': 'input',
+                    'name': 'listItem',
+                    'message': 'Add a list item (Enter \'-\' to finish):',
+                }]
 
-        editItemPrompt = [{
-            'type':'input',
-            'name':'itemEdited',
-            'message': 'Edit the item (Delete all text to delete item):',
-            'default': glistitem.text
-        }]
+                listItemAnswer = prompt(addListItem)
 
-        editItemAnswer = prompt(editItemPrompt)
+                listItem = (listItemAnswer.get('listItem'), False)
 
-        if editItemAnswer.get('itemEdited') != '':
-            glistitem.text = editItemAnswer.get('itemEdited')
+                listItems.append(listItem)
+
+                if listItemAnswer.get('listItem') == '-':
+                    listItems.pop(len(listItems)-1)
+                    listFinished = True
+
+            for index in range(len(listItems)):
+                gnote.add(listItems[index][0], listItems[index][1])
+
             keep.sync()
 
-            noteToEdit = removeListBorder(noteToEdit)
-            for index in range(len(noteToEdit[0])):
-                if index > 0:
-                    noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
-            noteToEdit[0][(itemList.index(itemToEditAnswer.get('item')))+1] = '□ ' + editItemAnswer.get('itemEdited')
-            noteToEdit = addListBorder(noteToEdit)
-            noteList[indexOfNote] = noteToEdit[0]
+            noteList = listifyGoogleNotes(googleNotes)
+            noteList = addListBorder(noteList)
+            noteToEdit[0] = noteList[indexOfNote]
+            noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
+        elif itemToEditAnswer.get('item') == '...⏎ Go Back ⏎':
+            noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
         else:
-            # Add delete item
-            pass
+            glistitem = gnote.unchecked[itemList.index(itemToEditAnswer.get('item'))]
+
+            editItemPrompt = [{
+                'type':'input',
+                'name':'itemEdited',
+                'message': 'Edit the item (Delete all text to delete item):',
+                'default': glistitem.text
+            }]
+
+            editItemAnswer = prompt(editItemPrompt)
+
+            if editItemAnswer.get('itemEdited') != '':
+                glistitem.text = editItemAnswer.get('itemEdited')
+                keep.sync()
+
+                noteToEdit = removeListBorder(noteToEdit)
+                for index in range(len(noteToEdit[0])):
+                    if index > 0:
+                        noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
+                noteToEdit[0][(itemList.index(itemToEditAnswer.get('item')))+1] = '□ ' + editItemAnswer.get('itemEdited')
+                noteToEdit = addListBorder(noteToEdit)
+                noteList[indexOfNote] = noteToEdit[0]
+            else:
+                # Add delete item
+                pass
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
-    #INCOMPLETE
+    #WORKING
     elif listSelection.get('options') == 'Check the items of this list ✎':
         # Select list item to edit ==> options: check or uncheck, edit item
         itemList = []
@@ -542,16 +582,16 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         for index in range(len(checkedItems)):
             try:
                 noteToEdit[0].index(checkedItems[index])
-                googleNotes[indexOfNote].items[index].checked = True
+                googleList = gnote.unchecked
+                googleList[index].checked = True
                 keep.sync()
             except:
                 pass
-
+        googleNotes = keep.all()
         noteList = listifyGoogleNotes(googleNotes)
         noteList = addListBorder(noteList)
         noteToEdit[0] = noteList[indexOfNote]
-        print(noteList[indexOfNote], noteToEdit[0])
-        #noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
     #WORKING
     elif listSelection.get('options') == '⏎ Go Back ⏎':
