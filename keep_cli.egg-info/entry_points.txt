@@ -1,4 +1,0 @@
-[console_scripts]
-keep = keep.keep:main
-keep-cli = keep.keep:main
-
