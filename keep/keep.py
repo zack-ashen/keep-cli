@@ -9,21 +9,21 @@ note taking/list making website developed by Google.
 Contact: zachary.h.a@gmail.com
 """
 
-#from __future__ import print_function, unicode_literals
+import os
+from time import sleep
+import re
+from textwrap import fill
 import gkeepapi
 from pyfiglet import Figlet
-import sys # can get rid of this -- replace sys.stdout with print
-from time import sleep
-import os
-from textwrap import fill
-import re
-from PyInquirer import prompt, print_json
-from KeepGrid import KeepGrid
+from PyInquirer import prompt
 import argparse
 
+import keep.notegrid
+from .__init__ import __version__
+
 # Enter your credentials here to save them
-username = 'zachary.h.a@gmail.com'
-password = 'orghhdaqedhypamu'
+username = 'zashen2020@berkeleycarroll.org'
+password = 'Samurai123!'
 
 #username = 'example@gmail.com'
 #password = 'password'
@@ -37,28 +37,6 @@ continuePrintingRow = True
 keep = gkeepapi.Keep()
 
 fig = Figlet(font='larry3d', justify='center', width=width)
-
-
-def main():
-    animateWelcomeText()
-    if username=='example@gmail.com' and password=='password':
-        login()
-    else:
-        # If user has already entered login info then display notes.
-        sys.stdout.write('\033[1;32m')
-        print('Using credentials you entered in keepd.py to login...\n'.center(width))
-
-
-        try:
-            keep.login(username, password)
-        except:
-            sys.stdout.write('\u001b[31m')
-            print("Your login credentials were incorrect!\n")
-            return
-
-        sys.stdout.write('\033[21;93m')
-
-        noteView()
 
 def listifyGoogleNotes(googleNotes):
     """Returns: a nested list from a Google Note object. Checked items are   removed from the list.
@@ -209,9 +187,9 @@ def printGrid(nestedList, startPos=0):
     centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
 
     for i in range(len(nestedListFormatted)):
-        sys.stdout.write('\u001b[0;33m')
+        print('\u001b[0;33m', end='')
         if i == 1:
-            sys.stdout.write('\u001b[1;33m')
+            print('\u001b[1;33m', end='')
         stringLine = ''.join(nestedListFormatted[i])
         print((centerSpaceCount * ' '), stringLine)
 
@@ -223,11 +201,9 @@ def noteView():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
 
-    noteGrid = KeepGrid(googleNotes, width)
-
     os.system('clear')
-    sys.stdout.write('\033[1;33m')
-    sys.stdout.write(fig.renderText('Keep...'))
+    print('\033[1;33m')
+    print(fig.renderText('Keep...'))
 
     # ------ Using Methods ------
 
@@ -238,6 +214,7 @@ def noteView():
     noteList = addListBorder(noteList)
 
     printGrid(noteList)
+    print('\n')
     continuePrintingRow = True
 
     initialPrompt = [
@@ -385,8 +362,8 @@ def editNoteSelector(noteList, googleNotes):
 
 def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     os.system('clear')
-    sys.stdout.write('\033[1;33m')
-    sys.stdout.write(fig.renderText('keep...'))
+    print('\033[1;33m')
+    print(fig.renderText('keep...'))
 
     printGrid(noteToEdit)
     global continuePrintingRow
@@ -395,9 +372,20 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     gnote = googleNotes[indexOfNote]
 
     if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
-        choices = ['Check the items of this list ✎', 'Edit the items of this list ✎', 'Edit the title of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
+        choices = [
+            'Check the items of this list ✎', 
+            'Edit the items of this list ✎', 
+            'Edit the title of this note ✎', 
+            'Delete this note ⌫', 
+            '⏎ Go Back ⏎'
+        ]
     else:
-        choices = ['Edit the title of this note ✎', 'Edit the body of this note ✎', 'Delete this note ⌫', '⏎ Go Back ⏎']
+        choices = [
+            'Edit the title of this note ✎', 
+            'Edit the body of this note ✎', 
+            'Delete this note ⌫', 
+            '⏎ Go Back ⏎'
+        ]
 
     editOptions = [
         {
@@ -599,8 +587,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
 def login():
     """Prompts the user to login and logs them in."""
-    sys.stdout.write('\033[21;93m')
-    sys.stdout.write('Please Login: \n \n')
+    print('\033[21;93m')
+    print('Please Login: \n \n')
     login = [
     {
         'type': 'input',
@@ -621,7 +609,7 @@ def login():
     try:
         keep.login(username, password)
     except:
-        sys.stdout.write('\u001b[31m')
+        print('\u001b[31m', end='')
         print("Your login credentials were incorrect!\n")
         return
 
@@ -638,11 +626,11 @@ def animateWelcomeText():
     for x in welcomeText:
         os.system('clear')
         text += x
-        sys.stdout.write('\033[1;33m')
-        sys.stdout.write(fig.renderText(text))
+        print('\033[1;33m')
+        print(fig.renderText(text))
         sleep(0.1)
 
-    sys.stdout.write('\n')
+    print('\n')
 
     paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keepd. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
 
@@ -664,6 +652,27 @@ def animateWelcomeText():
 
 def addArguments():
     pass
+
+def main():
+    animateWelcomeText()
+    if username=='example@gmail.com' and password=='password':
+        login()
+    else:
+        # If user has already entered login info then display notes.
+        print('\033[1;32m')
+        print('Using credentials you entered in keepd.py to login...\n'.center(width))
+
+        #Handle if
+        try:
+            keep.login(username, password)
+        except:
+            print('\u001b[31m', end='')
+            print("Your login credentials were incorrect!\n")
+            return
+
+        print('\033[21;93m')
+
+        noteView()
 
 if __name__ == '__main__':
     main()
