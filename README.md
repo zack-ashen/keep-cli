@@ -32,6 +32,10 @@ In order to make a note you must have the `$EDITOR` environment variable set to 
 ```sh
 keep-cli
 ```
+#### Skip the intro animation (quick mode):
+```sh
+keep-cli --quick
+```
 #### Make a list or note:
 For a note:
 ```sh
