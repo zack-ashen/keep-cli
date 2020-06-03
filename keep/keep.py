@@ -232,7 +232,7 @@ def noteView():
         return
 
 
-def makeAList(noteList):
+def makeAList(noteList, displayNoteView=True):
     listTitlePrompt = [
     {
         'type': 'input',
@@ -266,10 +266,13 @@ def makeAList(noteList):
 
     gnote = keep.createList(listTitle, listItems)
     keep.sync()
-    noteView()
+    if displayNoteView:
+        noteView()
+    else:
+        return
 
 
-def makeANote(noteList):
+def makeANote(noteList, displayNoteView=True):
     noteTitlePrompt = [
     {
         'type': 'input',
@@ -290,7 +293,10 @@ def makeANote(noteList):
 
     gnote = keep.createNote(noteTitle, noteText)
     keep.sync()
-    noteView()
+    if displayNoteView:
+        noteView()
+    else:
+        return
 
 #TODO Build method
 def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
@@ -626,8 +632,6 @@ def login():
     else:
         keep.login(username, password)
 
-    noteView()
-
 
 def animateWelcomeText():
     """Animates the welcome keepd text in ASCII font and welcome paragraph."""
@@ -663,12 +667,35 @@ def animateWelcomeText():
             line += '─'
         print(line)
 
-def addArguments():
-    pass
+def parseArguments():
+    parser = argparse.ArgumentParser(description='keep-cli is a command line version of Google Keep. You can add, view, edit and delete notes.')
+
+    parser.add_argument('--quick', help='Skips the intro animation and gets directly to login.', action='store_true')
+    parser.add_argument('--note', help='Make a note...', action='store_true')
+    parser.add_argument('--list', help='Make a list...', action='store_true')
+    args = parser.parse_args()
+
+    if args.quick:
+        login()
+        noteView()
+    elif not args.quick and not args.note and not args.list:
+        animateWelcomeText()
+        login()
+        noteView()
+    if args.note:
+        login()
+        googleNotes = keep.all()
+        noteList = [[]]
+        makeANote(noteList, False)
+
+    elif args.list:
+        googleNotes = keep.all()
+        noteList = [[]]
+        makeAList(noteList, False)
 
 def main():
-    animateWelcomeText()
-    login()
+    parseArguments()
+
 
 if __name__ == '__main__':
     main()
