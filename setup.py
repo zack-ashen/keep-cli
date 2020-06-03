@@ -3,11 +3,12 @@ from keep import __version__
 from setuptools import setup, find_packages
 
 install_requirements = [
-    'gkeepapi>=0.11.15',
+    'gkeepapi>=0.11.16',
     'pyfiglet>=0.8.post1',
     'PyInquirer>=1.0.3',
     'argparse>=1.4.0',
-    'keyring>=21.2.1'
+    'keyring>=21.2.1',
+    'keyrings.alt>=3.4.0'
 ]
 
 setup(
@@ -18,14 +19,15 @@ setup(
     license='MIT',
     description='Keep-cli is a cli Google Keep client. You can add, delete, and manage your Google Keep notes.',
     url='https://github.com/zack-ashen/keep-cli',
-    long_description=open('README.md').read(),
+    long_description=open('README-pip.md').read(),
+    long_description_content_type ="text/markdown",
     install_requires=install_requirements,
     python_requires=">=3",
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Environment :: Console',
-        'License :: OSI Approved :: MIT',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
