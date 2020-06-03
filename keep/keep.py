@@ -20,7 +20,7 @@ from PyInquirer import prompt
 import argparse
 import keyring
 
-import keep.notegrid
+import keep.NoteGrid
 from .__init__ import __version__
 
 columns, rows = os.get_terminal_size(0)
@@ -193,6 +193,11 @@ def printGrid(nestedList, startPos=0):
         printGrid(nestedList, columnEndPos+1)
 
 
+#TODO Build method
+def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
+    pass
+
+
 def noteView():
     """Displays the notes from your Google Keep account in a grid view with borders."""
     googleNotes = keep.all()
@@ -227,7 +232,7 @@ def noteView():
     elif initialSelection.get('options') == 'Make a New List':
         makeAList(noteList)
     elif initialSelection.get('options') == 'Edit a Note':
-        editNoteSelector(noteList, googleNotes)
+        editNoteSelectorView(noteList, googleNotes)
     elif initialSelection.get('options') == 'Exit':
         return
 
@@ -298,11 +303,8 @@ def makeANote(noteList, displayNoteView=True):
     else:
         return
 
-#TODO Build method
-def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
-    pass
 
-def editNoteSelector(noteList, googleNotes):
+def editNoteSelectorView(noteList, googleNotes):
     global continuePrintingRow
 
     titleList = []
@@ -370,6 +372,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     print(fig.renderText('keep...'))
 
     printGrid(noteToEdit)
+
     global continuePrintingRow
     continuePrintingRow = True
 
@@ -398,20 +401,15 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
             'message': 'What would you like to do to this note?',
             'choices': choices
         }]
-
     listSelection = prompt(editOptions)
 
 
     # LOOK AT THESE FOR REPEATED CODE (CONVERT TO METHODS)
-
-    #WORKING
     if listSelection.get('options') == 'Delete this note ⌫':
         noteToDelete = googleNotes[indexOfNote]
         noteToDelete.delete()
         keep.sync()
         noteView()
-
-    #WORKING
     elif listSelection.get('options') == 'Edit the title of this note ✎':
         newTitlePrompt = [
         {
@@ -441,8 +439,6 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         noteToEdit = addListBorder(noteToEdit)
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-
-    #WORKING
     elif listSelection.get('options') == 'Edit the body of this note ✎':
         os.system('touch note')
 
@@ -460,8 +456,6 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         gnote.text = noteText
         keep.sync()
         noteView()
-
-    #ADD ABILITY TO ADD ITEMS
     elif listSelection.get('options') == 'Edit the items of this list ✎':
         itemList = []
         for index in range(len(noteList[indexOfNote])):
@@ -543,8 +537,6 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
                 pass
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-
-    #WORKING
     elif listSelection.get('options') == 'Check the items of this list ✎':
         # Select list item to edit ==> options: check or uncheck, edit item
         itemList = []
@@ -584,10 +576,9 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         noteList = addListBorder(noteList)
         noteToEdit[0] = noteList[indexOfNote]
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-
-    #WORKING
     elif listSelection.get('options') == '⏎ Go Back ⏎':
-        editNoteSelector(noteList, googleNotes)
+        editNoteSelectorView(noteList, googleNotes)
+
 
 def login():
     """Prompts the user to login and logs them in."""
@@ -667,6 +658,7 @@ def animateWelcomeText():
             line += '─'
         print(line)
 
+
 def parseArguments():
     parser = argparse.ArgumentParser(description='keep-cli is a command line version of Google Keep. You can add, view, edit and delete notes.')
 
@@ -692,6 +684,7 @@ def parseArguments():
         googleNotes = keep.all()
         noteList = [[]]
         makeAList(noteList, False)
+
 
 def main():
     parseArguments()
