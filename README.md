@@ -1,8 +1,8 @@
 
-<h1 align="center"><img src="logo.png" style="width:140px; height:auto"></h1>
+<h1 align="center"><img src="img/logo.png" style="width:140px; height:auto"></h1>
 <p align="center">Keep-cli is a cli Google Keep client. You can add, delete, and manage your Google Keep notes.</p>
 
-![alt text](screenshot.png "Demo")
+![alt text](img/screenshot.png "Demo")
 
 ## Setup
 
