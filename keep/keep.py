@@ -13,20 +13,15 @@ import os
 from time import sleep
 import re
 from textwrap import fill
+
 import gkeepapi
 from pyfiglet import Figlet
 from PyInquirer import prompt
 import argparse
+import keyring
 
 import keep.notegrid
 from .__init__ import __version__
-
-# Enter your credentials here to save them
-username = 'zashen2020@berkeleycarroll.org'
-password = 'Samurai123!'
-
-#username = 'example@gmail.com'
-#password = 'password'
 
 columns, rows = os.get_terminal_size(0)
 width = columns
@@ -34,9 +29,10 @@ width = columns
 columnEndPos = 0
 continuePrintingRow = True
 
-keep = gkeepapi.Keep()
 
 fig = Figlet(font='larry3d', justify='center', width=width)
+
+keep = gkeepapi.Keep()
 
 def listifyGoogleNotes(googleNotes):
     """Returns: a nested list from a Google Note object. Checked items are   removed from the list.
@@ -221,8 +217,8 @@ def noteView():
     {
         'type': 'list',
         'name': 'options',
-        'message': 'Please a Note Title to Edit:',
-        'choices': ['Make a New Note', 'Make a New List', 'Edit a Note']
+        'message': 'Please select an option:',
+        'choices': ['Make a New Note', 'Make a New List', 'Edit a Note', 'Exit']
     }]
     initialSelection = prompt(initialPrompt)
 
@@ -232,6 +228,8 @@ def noteView():
         makeAList(noteList)
     elif initialSelection.get('options') == 'Edit a Note':
         editNoteSelector(noteList, googleNotes)
+    elif initialSelection.get('options') == 'Exit':
+        return
 
 
 def makeAList(noteList):
@@ -373,17 +371,17 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
     if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
         choices = [
-            'Check the items of this list ✎', 
-            'Edit the items of this list ✎', 
-            'Edit the title of this note ✎', 
-            'Delete this note ⌫', 
+            'Check the items of this list ✎',
+            'Edit the items of this list ✎',
+            'Edit the title of this note ✎',
+            'Delete this note ⌫',
             '⏎ Go Back ⏎'
         ]
     else:
         choices = [
-            'Edit the title of this note ✎', 
-            'Edit the body of this note ✎', 
-            'Delete this note ⌫', 
+            'Edit the title of this note ✎',
+            'Edit the body of this note ✎',
+            'Delete this note ⌫',
             '⏎ Go Back ⏎'
         ]
 
@@ -589,29 +587,44 @@ def login():
     """Prompts the user to login and logs them in."""
     print('\033[21;93m')
     print('Please Login: \n \n')
-    login = [
+    usernamePrompt = [
     {
         'type': 'input',
         'name': 'username',
         'message': 'Please enter your username:',
-    },
-    {
-        'type': 'password',
-        'name': 'password',
-        'message': 'Please enter your password:',
     }]
+    usernameCredentials = prompt(usernamePrompt)
 
-    loginCredentials = prompt(login)
+    username = usernameCredentials['username']
+    password = keyring.get_password('google-keep', username)
 
-    username = loginCredentials['username']
-    password = loginCredentials['password']
+    if isinstance(password, type(None)):
+        passwordCredentials = [
+        {
+            'type': 'password',
+            'name': 'password',
+            'message': 'Please enter your password:',
+        },
+        {
+            'type': 'confirm',
+            'name': 'confirm-save',
+            'message': 'Would you like your password to be saved?'
+        }]
 
-    try:
+        passwordCredentials = prompt(passwordCredentials)
+        password = passwordCredentials['password']
+
+        try:
+            keep.login(username, password)
+        except:
+            print('\u001b[31m', end='')
+            print("Your login credentials were incorrect!\n")
+            return
+
+        if passwordCredentials['confirm-save'] == True:
+            keyring.set_password('google-keep', username, password)
+    else:
         keep.login(username, password)
-    except:
-        print('\u001b[31m', end='')
-        print("Your login credentials were incorrect!\n")
-        return
 
     noteView()
 
@@ -623,16 +636,16 @@ def animateWelcomeText():
 
     text = ''
 
-    for x in welcomeText:
+    for character in welcomeText:
         os.system('clear')
-        text += x
+        text += character
         print('\033[1;33m')
         print(fig.renderText(text))
         sleep(0.1)
 
     print('\n')
 
-    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keepd. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
+    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keep-cli. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
 
     paragraphStrings = []
 
@@ -655,24 +668,7 @@ def addArguments():
 
 def main():
     animateWelcomeText()
-    if username=='example@gmail.com' and password=='password':
-        login()
-    else:
-        # If user has already entered login info then display notes.
-        print('\033[1;32m')
-        print('Using credentials you entered in keepd.py to login...\n'.center(width))
-
-        #Handle if
-        try:
-            keep.login(username, password)
-        except:
-            print('\u001b[31m', end='')
-            print("Your login credentials were incorrect!\n")
-            return
-
-        print('\033[21;93m')
-
-        noteView()
+    login()
 
 if __name__ == '__main__':
     main()
