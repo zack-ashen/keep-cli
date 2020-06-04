@@ -25,8 +25,8 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-README-pip.md
 MANIFEST
+keep-cli-git/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
