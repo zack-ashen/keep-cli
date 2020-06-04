@@ -25,10 +25,6 @@ pip install keep-cli
 ```sh
 yay -S keep-cli
 ```
-#### macOS
-```sh
-brew cask install keep-cli
-```
 
 ### Configuration
 In order to make a note you must have the `$EDITOR` environment variable set to a text editor.
@@ -36,7 +32,6 @@ In order to make a note you must have the `$EDITOR` environment variable set to 
 ## Usage
 
 ### Run keep-cli visually:
-#### Run the standard way:
 ```sh
 keep-cli
 ```
@@ -53,7 +48,3 @@ For a list:
 ```sh
 keep-cli --list
 ```
-
-## Features
-
-## Other Resources
