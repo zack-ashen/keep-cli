@@ -23,7 +23,7 @@ import keyring
 import keep.NoteGrid
 from .__init__ import __version__
 
-columns, rows = os.get_terminal_size(0)
+columns, rows = os.get_terminal_size()
 width = columns
 
 columnEndPos = 0
