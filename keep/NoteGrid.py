@@ -1,6 +1,6 @@
-"""Helper functions for printing out grid of notes. These functions assist with
-the printing of a grid of notes in tandem with a Google Keep object and a nested
-list of notes.
+"""Helper functions for printing out grid of notes or just one note. These
+functions assist with the printing of a grid of notes in tandem with a Google
+Keep object and a nested list of notes.
 
 Author: Zachary Ashen
 Date: June 3rd 2020
@@ -8,7 +8,7 @@ Date: June 3rd 2020
 
 
 def listifyGoogleNotes(googleNotes):
-    """Returns: a nested list from a Google Note object. Checked items are   removed from the list.
+    """Returns: a nested list from a Google Note object. Checked items are removed from the list.
 
     Example: Google Note object with list titled 'Foo List' and items:
     'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
