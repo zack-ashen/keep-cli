@@ -20,7 +20,7 @@ from PyInquirer import prompt
 import argparse
 import keyring
 
-import keep.NoteGrid
+from . import NoteGrid
 from .__init__ import __version__
 
 columns, rows = os.get_terminal_size()
@@ -196,9 +196,13 @@ def editNoteSelectorView(noteList, googleNotes):
     for index in range(len(noteList)):
         for i in range(len(noteList[index])):
             try:
-                testNoteExistence = noteList[i][index].index(notes[0])
-                noteToEdit.append(noteList[i])
-                indexOfNote = i
+                if len(noteList) == 1:
+                    noteToEdit.append(noteList[0])
+                    indexOfNote  = 0
+                else:
+                    testNoteExistence = noteList[i][index].index(notes[0])
+                    noteToEdit.append(noteList[i])
+                    indexOfNote = i
             except:
                 pass
 
