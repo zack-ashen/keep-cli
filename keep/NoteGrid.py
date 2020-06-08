@@ -6,6 +6,14 @@ Author: Zachary Ashen
 Date: June 3rd 2020
 """
 
+import re
+from textwrap import fill
+import os
+
+import gkeepapi
+
+columns, rows = os.get_terminal_size()
+width = columns
 
 def listifyGoogleNotes(googleNotes):
     """Returns: a nested list from a Google Note object. Checked items are removed from the list.
