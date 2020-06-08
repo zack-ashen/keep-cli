@@ -34,164 +34,6 @@ fig = Figlet(font='larry3d', justify='center', width=width)
 
 keep = gkeepapi.Keep()
 
-def listifyGoogleNotes(googleNotes):
-    """Returns: a nested list from a Google Note object. Checked items are   removed from the list.
-
-    Example: Google Note object with list titled 'Foo List' and items:
-    'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
-    'Garbage in garbage out the end of this note', becomes:
-    [[["Foo List"], ["get apples"], ["pick up gorceries"]],
-    [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
-
-    Precondition: googleNote is a list containing either items of type
-    'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
-
-
-    # This is the list accumulator that recieves the parsed Google Notes
-    noteList = []
-
-    for index in range(len(googleNotes)):
-        # execute if note is a list
-        if type(googleNotes[index]) == gkeepapi.node.List:
-            # Only retrieve unchecked list items
-            uncheckedList = googleNotes[index].unchecked
-            noteTitle = googleNotes[index].title
-            # get the string text of the list and change the list item to the string
-            for i in range(len(uncheckedList)):
-                uncheckedList[i] = '□  ' + uncheckedList[i].text
-            noteList.append(uncheckedList)
-            uncheckedList.insert(0, noteTitle)
-        # execute of note is a note
-        else:
-            note = googleNotes[index]
-            noteTitle = note.title
-            note = note.text.split('\n')
-            noteList.append(note)
-            note.insert(0, noteTitle)
-    return noteList
-
-
-def wrapText(nestedList):
-    for index in range(len(nestedList)):
-        for i in range(len(nestedList[index])):
-            if len(nestedList[index][i]) > (width-25):
-
-                nestedList[index][i] = fill(nestedList[index][i], width=(width-22))
-
-                unwrappedText = nestedList[index][i]
-
-                #nestedList[index][i][width-30:width-20].split(' ')
-                wrappedTextList = nestedList[index][i].split('\n')
-                #print(wrappedTextList)
-                for a in range(len(wrappedTextList)):
-                    nestedList[index].insert(i+(a), wrappedTextList[a])
-                nestedList[index].remove(str(unwrappedText))
-
-    return nestedList
-
-
-def addListBorder(nestedList):
-    """Returns: a ragged list with ASCII borders. The nested lists will have borders.
-    Precondition: list is a nested list and all items in the nested list are strings"""
-    for index in range(len(nestedList)):
-        listItem = nestedList[index]
-        borderWidth = max(len(s) for s in listItem)
-
-        # add top border
-        topBorder = ['┌' + '─' * borderWidth + '┐']
-        topBorder = re.sub("['',]", '', str(topBorder)).strip('[]')
-        nestedList[index].insert(0, topBorder)
-
-        # iterate over middle lines and add border there
-        for i in range(len(listItem)):
-            if i == 1:
-                listItem[i] = '│' + (' ' * ((borderWidth-len(listItem[i]))//2)) + (listItem[i] + ' ' * ((1+borderWidth-len(listItem[i]))//2))[:borderWidth] + '│'
-            elif i >= 2:
-                listItem[i] = '│' + (listItem[i] + ' ' * borderWidth)[:borderWidth] + '│'
-
-        # add bottom border
-        bottomBorder = ['└' + '─' * borderWidth + '┘']
-        bottomBorder = re.sub("['',]", '', str(bottomBorder)).strip('[]')
-        nestedList[index].append(bottomBorder)
-    return nestedList
-
-
-def removeListBorder(nestedList):
-    for index in range(len(nestedList)):
-        nestedList[index].pop(0)
-        nestedList[index].pop(len(nestedList[index])-1)
-
-    for index in range(len(nestedList)):
-        for i in range(len(nestedList[index])):
-            nestedList[index][i] = re.sub("[│□]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
-    return nestedList
-
-
-def printGrid(nestedList, startPos=0):
-    maxNestedListLength = max(len(i) for i in nestedList)
-    nestedListItemWidthAccumulator = 0
-    foundColumnCount = False
-
-    global columnEndPos
-    global continuePrintingRow
-
-    rowPosition = range(len(nestedList))
-
-    # ------ Find columnEndPos ------
-    for index in rowPosition[startPos:]:
-        nestedListItem = nestedList[index]
-
-        noteWidth = max(len(s) for s in nestedListItem)
-        nestedListItemWidthAccumulator += noteWidth
-        if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
-            columnEndPos = (nestedList.index(nestedList[index-1]))
-            foundColumnCount = True
-        elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
-            columnEndPos = len(nestedList)
-            continuePrintingRow = False
-            foundColumnCount = True
-    # ------ End Find columnEndPos ------
-
-    # ------ Add spaces below note to make rectangular row of characters ------
-    if columnEndPos == startPos:
-        maxNestedListLength = len(nestedList[columnEndPos])
-    elif columnEndPos == len(nestedList):
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos])
-    else:
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos+1])
-
-    for index in rowPosition[startPos:columnEndPos+1]:
-        nestedListItem = nestedList[index]
-        noteWidth = max(len(s) for s in nestedListItem)
-        for i in range(len(nestedListItem)):
-            if len(nestedListItem) < maxNestedListLength:
-                for x in range(maxNestedListLength-len(nestedListItem)):
-                    nestedListItem.append(' ' * noteWidth)
-    # ------ End add spaces below note to make rectangular row of characters ------
-
-
-    if (columnEndPos+1) == startPos:
-        nestedListFormatted = nestedList[columnEndPos+1]
-    else:
-        nestedListRow = nestedList[startPos:columnEndPos+1]
-
-        nestedListFormatted = zip(*nestedListRow)
-
-        nestedListFormatted = list(nestedListFormatted)
-
-    # ------ Center Notes ------
-    centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
-
-    for i in range(len(nestedListFormatted)):
-        print('\u001b[0;33m', end='')
-        if i == 1:
-            print('\u001b[1;33m', end='')
-        stringLine = ''.join(nestedListFormatted[i])
-        print((centerSpaceCount * ' '), stringLine)
-
-    while continuePrintingRow:
-        printGrid(nestedList, columnEndPos+1)
-
 
 #TODO Build method
 def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
@@ -206,34 +48,46 @@ def noteView():
     print('\033[1;33m')
     print(fig.renderText('Keep...'))
 
-    # ------ Using Methods ------
+    if len(googleNotes) == 0:
+        print('\u001b[1;31m', end='')
+        print('You don\'t have any notes!'.center(width))
+        choices = [
+            '✎ Make a New Note ✎',
+            '✎ Make a New List ✎',
+            '⛔ Exit ⛔'
+        ]
+        noteList = []
+    else:
+        global continuePrintingRow
 
-    global continuePrintingRow
-
-    noteList = listifyGoogleNotes(googleNotes)
-    noteList = wrapText(noteList)
-    noteList = addListBorder(noteList)
-
-    printGrid(noteList)
-    print('\n')
-    continuePrintingRow = True
+        noteList = NoteGrid.listifyGoogleNotes(googleNotes)
+        noteList = NoteGrid.wrapText(noteList)
+        noteList = NoteGrid.addListBorder(noteList)
+        NoteGrid.printGrid(noteList)
+        print('\n')
+        continuePrintingRow = True
+        choices =  [
+            '✎ Make a New Note ✎',
+            '✎ Make a New List ✎',
+            'Edit a Note',
+            '⛔ Exit ⛔']
 
     initialPrompt = [
     {
         'type': 'list',
         'name': 'options',
         'message': 'Please select an option:',
-        'choices': ['Make a New Note', 'Make a New List', 'Edit a Note', 'Exit']
+        'choices': choices
     }]
     initialSelection = prompt(initialPrompt)
 
-    if initialSelection.get('options') == 'Make a New Note':
+    if initialSelection.get('options') == '✎ Make a New Note ✎':
         makeANote(noteList)
-    elif initialSelection.get('options') == 'Make a New List':
+    elif initialSelection.get('options') == '✎ Make a New List ✎':
         makeAList(noteList)
     elif initialSelection.get('options') == 'Edit a Note':
         editNoteSelectorView(noteList, googleNotes)
-    elif initialSelection.get('options') == 'Exit':
+    elif initialSelection.get('options') == '⛔ Exit ⛔':
         return
 
 
@@ -371,7 +225,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     print('\033[1;33m')
     print(fig.renderText('keep...'))
 
-    printGrid(noteToEdit)
+    NoteGrid.printGrid(noteToEdit)
 
     global continuePrintingRow
     continuePrintingRow = True
@@ -429,14 +283,14 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
         borderWidth = len(noteToEdit[0][1])
         noteToEdit[0][1] = newTitle
 
-        noteToEdit = removeListBorder(noteToEdit)
+        noteToEdit = NoteGrid.removeListBorder(noteToEdit)
 
         if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
             for index in range(len(noteToEdit[0])):
                 if index > 0:
                     noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
 
-        noteToEdit = addListBorder(noteToEdit)
+        noteToEdit = NoteGrid.addListBorder(noteToEdit)
 
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
     elif listSelection.get('options') == 'Edit the body of this note ✎':
@@ -502,8 +356,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
             keep.sync()
 
-            noteList = listifyGoogleNotes(googleNotes)
-            noteList = addListBorder(noteList)
+            noteList = NoteGrid.listifyGoogleNotes(googleNotes)
+            noteList = NoteGrid.addListBorder(noteList)
             noteToEdit[0] = noteList[indexOfNote]
             noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
 
@@ -525,12 +379,12 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
                 glistitem.text = editItemAnswer.get('itemEdited')
                 keep.sync()
 
-                noteToEdit = removeListBorder(noteToEdit)
+                noteToEdit = NoteGrid.removeListBorder(noteToEdit)
                 for index in range(len(noteToEdit[0])):
                     if index > 0:
                         noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
                 noteToEdit[0][(itemList.index(itemToEditAnswer.get('item')))+1] = '□ ' + editItemAnswer.get('itemEdited')
-                noteToEdit = addListBorder(noteToEdit)
+                noteToEdit = NoteGrid.addListBorder(noteToEdit)
                 noteList[indexOfNote] = noteToEdit[0]
             else:
                 # Add delete item
@@ -562,7 +416,7 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
 
         for index in range(len(checkedItems)):
             checkedItems[index] = re.sub("[□]", '', str(checkedItems[index])).rstrip(' ').lstrip(' ')
-        noteToEdit = removeListBorder(noteToEdit)
+        noteToEdit = NoteGrid.removeListBorder(noteToEdit)
         for index in range(len(checkedItems)):
             try:
                 noteToEdit[0].index(checkedItems[index])
@@ -572,8 +426,8 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
             except:
                 pass
         googleNotes = keep.all()
-        noteList = listifyGoogleNotes(googleNotes)
-        noteList = addListBorder(noteList)
+        noteList = NoteGrid.listifyGoogleNotes(googleNotes)
+        noteList = NoteGrid.addListBorder(noteList)
         noteToEdit[0] = noteList[indexOfNote]
         noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
     elif listSelection.get('options') == '⏎ Go Back ⏎':
