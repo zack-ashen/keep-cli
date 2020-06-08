@@ -18,7 +18,7 @@
 
 #### PIP (easiest)
 ```sh
-pip install keep-cli-git
+pip install keep-cli
 ```
 
 #### Arch Linux (AUR)
