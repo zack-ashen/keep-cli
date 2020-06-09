@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Keep-CLI
 Author: Zachary Ashen
@@ -21,7 +19,7 @@ import argparse
 import keyring
 
 from . import NoteGrid
-from .__init__ import __version__
+
 
 columns, rows = os.get_terminal_size()
 width = columns
@@ -29,26 +27,20 @@ width = columns
 columnEndPos = 0
 continuePrintingRow = True
 
-
 fig = Figlet(font='larry3d', justify='center', width=width)
 
 keep = gkeepapi.Keep()
 
 
-#TODO Build method
-def refresh(noteList, googleNotes, noteToEdit, indexOfNote):
-    pass
-
-
-def noteView():
+def note_view():
     """Displays the notes from your Google Keep account in a grid view with borders."""
-    googleNotes = keep.all()
+    google_notes = keep.all()
 
     os.system('clear')
     print('\033[1;33m')
     print(fig.renderText('Keep...'))
 
-    if len(googleNotes) == 0:
+    if len(google_notes) == 0:
         print('\u001b[1;31m', end='')
         print('You don\'t have any notes!'.center(width))
         choices = [
@@ -56,186 +48,212 @@ def noteView():
             '✎ Make a New List ✎',
             '⛔ Exit ⛔'
         ]
-        noteList = []
+        note_list = []
     else:
         global continuePrintingRow
 
-        noteList = NoteGrid.listifyGoogleNotes(googleNotes)
-        noteList = NoteGrid.wrapText(noteList)
-        noteList = NoteGrid.addListBorder(noteList)
-        NoteGrid.printGrid(noteList, continuePrintingRow)
+        note_list = NoteGrid.listify_google_notes(google_notes)
+        note_list = NoteGrid.wrap_text(note_list)
+        note_list = NoteGrid.add_list_border(note_list)
+        NoteGrid.print_grid(note_list, continuePrintingRow)
         print('\n')
         continuePrintingRow = True
-        choices =  [
+        choices = [
             '✎ Make a New Note ✎',
             '✎ Make a New List ✎',
             'Edit a Note',
             '⛔ Exit ⛔']
 
-    initialPrompt = [
-    {
-        'type': 'list',
-        'name': 'options',
-        'message': 'Please select an option:',
-        'choices': choices
-    }]
-    initialSelection = prompt(initialPrompt)
+    initial_prompt = [
+        {
+            'type': 'list',
+            'name': 'options',
+            'message': 'Please select an option:',
+            'choices': choices
+        }]
+    initial_selection = prompt(initial_prompt)
 
-    if initialSelection.get('options') == '✎ Make a New Note ✎':
-        makeANote(noteList)
-    elif initialSelection.get('options') == '✎ Make a New List ✎':
-        makeAList(noteList)
-    elif initialSelection.get('options') == 'Edit a Note':
-        editNoteSelectorView(noteList, googleNotes)
-    elif initialSelection.get('options') == '⛔ Exit ⛔':
+    if initial_selection.get('options') == '✎ Make a New Note ✎':
+        make_a_note(note_list)
+    elif initial_selection.get('options') == '✎ Make a New List ✎':
+        make_a_list(note_list)
+    elif initial_selection.get('options') == 'Edit a Note':
+        edit_note_selector_view(note_list, google_notes)
+    elif initial_selection.get('options') == '⛔ Exit ⛔':
         return
 
 
-def makeAList(noteList, displayNoteView=True):
-    listTitlePrompt = [
-    {
-        'type': 'input',
-        'name': 'noteTitle',
-        'message': 'What should the title of the list be?',
-    }]
-
-    listTitleAnswer = prompt(listTitlePrompt)
-
-    listTitle = listTitleAnswer.get('noteTitle')
-
-    listFinished = False
-    listItems = []
-    while listFinished == False:
-        addListItem = [
+def make_a_list(noteList, displayNoteView=True):
+    """Prompts the user to make a new list by going through prompts for title and list items...
+    @param noteList: a ragged list of notes with the format: [[['note tile'], ['item 1'], ['item 2']], [['note title'],
+    ['body of note random text etc...']]
+    @param displayNoteView: If true after creating a list note_view() is called after, but if False it simply creates
+    the list and returns. It is only false when the argument --list is used.
+    """
+    list_title_prompt = [
         {
             'type': 'input',
-            'name': 'listItem',
-            'message': 'Add a list item (Enter \'-\' to finish):',
+            'name': 'noteTitle',
+            'message': 'What should the title of the list be?',
         }]
 
-        listItemAnswer = prompt(addListItem)
+    list_title_answer = prompt(list_title_prompt)
 
-        listItem = (listItemAnswer.get('listItem'), False)
+    list_title = list_title_answer.get('noteTitle')
 
-        listItems.append(listItem)
+    list_finished = False
+    list_items = []
+    while not list_finished:
+        add_list_item = [
+            {
+                'type': 'input',
+                'name': 'list_item',
+                'message': 'Add a list item (Enter \'-\' to finish):',
+            }]
 
-        if listItemAnswer.get('listItem') == '-':
-            listItems.pop(len(listItems)-1)
-            listFinished = True
+        list_item_answer = prompt(add_list_item)
 
-    gnote = keep.createList(listTitle, listItems)
+        list_item = (list_item_answer.get('list_item'), False)
+
+        list_items.append(list_item)
+
+        if list_item_answer.get('list_item') == '-':
+            list_items.pop(len(list_items) - 1)
+            list_finished = True
+
+    gnote = keep.createList(list_title, list_items)
     keep.sync()
     if displayNoteView:
-        noteView()
+        note_view()
     else:
         return
 
 
-def makeANote(noteList, displayNoteView=True):
-    noteTitlePrompt = [
-    {
-        'type': 'input',
-        'name': 'noteTitle',
-        'message': 'What should the title of the note be?',
-    }]
+def make_a_note(note_list, display_note_view=True):
+    """Prompts the user to make a new note by going through prompts for title and body uses the $EDITOR env variable...
+    @param note_list: a ragged list of notes with the format: [[['note tile'], ['item 1'], ['item 2']], [['note title'],
+    ['body of note random text etc...']]
+    @param display_note_view: If true after creating a list note_view() is called after, but if False it simply creates
+    the list and returns. It is only false when the argument --list is used.
+    """
+    note_title_prompt = [
+        {
+            'type': 'input',
+            'name': 'note_title',
+            'message': 'What should the title of the note be?',
+        }]
 
-    noteTitleAnswer = prompt(noteTitlePrompt)
+    note_title_answer = prompt(note_title_prompt)
 
-    noteTitle = noteTitleAnswer.get('noteTitle')
+    note_title = note_title_answer.get('note_title')
 
     os.system('$EDITOR note')
 
     with open('note', 'r') as file:
-        noteText = file.read()
+        note_text = file.read()
 
     os.system('rm note')
 
-    gnote = keep.createNote(noteTitle, noteText)
+    gnote = keep.createNote(note_title, note_text)
     keep.sync()
-    if displayNoteView:
-        noteView()
+    if display_note_view:
+        note_view()
     else:
         return
 
 
-def editNoteSelectorView(noteList, googleNotes):
+def edit_note_selector_view(note_list, google_notes):
+    """A view of all the possible notes to edit and allows the user to select a note. This note item has an index which
+    is then passed to the note_edit_view() to display that note for editing.
+    @param note_list: a ragged list of notes with the format: [[['note tile'], ['item 1'], ['item 2']], [['note title'],
+    ['body of note random text etc...']]
+    @param google_notes: A gkeepapi object which contains a list of keep objects such as lists and notes.
+    """
     global continuePrintingRow
 
-    titleList = []
-    for i in range(len(noteList)):
-        titleList.append(re.sub("[│]", '', str(noteList[i][1])).rstrip(' ').lstrip(' '))
+    title_list = []
+    for i in range(len(note_list)):
+        title_list.append(re.sub("[│]", '', str(note_list[i][1])).rstrip(' ').lstrip(' '))
 
-    titleList.append('⏎ Go Back ⏎')
+    title_list.append('⏎ Go Back ⏎')
 
-    listPrompt = [
-    {
-        'type': 'list',
-        'name': 'options',
-        'message': 'Please pick an note to edit:',
-        'choices': titleList
-    }]
+    list_prompt = [
+        {
+            'type': 'list',
+            'name': 'options',
+            'message': 'Please pick an note to edit:',
+            'choices': title_list
+        }]
 
-    listSelection = prompt(listPrompt)
+    list_selection = prompt(list_prompt)
 
-    if listSelection.get('options') == '⏎ Go Back ⏎':
-        noteView()
+    if list_selection.get('options') == '⏎ Go Back ⏎':
+        note_view()
 
     notes = []
-    for i in range(len(noteList)):
-        for index in range(len(noteList[i])):
-            title = list(filter(lambda x: listSelection.get('options') in noteList[i][index], noteList[i][index]))
-            titleString = ''
+    for i in range(len(note_list)):
+        for index in range(len(note_list[i])):
+            title = list(filter(lambda x: list_selection.get('options') in note_list[i][index], note_list[i][index]))
+            title_string = ''
             for y in range(len(title)):
-                titleString += title[y]
+                title_string += title[y]
 
-            if titleString != '':
-                notes.append(titleString)
+            if title_string != '':
+                notes.append(title_string)
 
-    noteToEdit = []
+    note_to_edit = []
 
-    for index in range(len(noteList)):
-        for i in range(len(noteList[index])):
+    for index in range(len(note_list)):
+        for i in range(len(note_list[index])):
             try:
-                if len(noteList) == 1:
-                    noteToEdit.append(noteList[0])
-                    indexOfNote  = 0
+                if len(note_list) == 1:
+                    note_to_edit.append(note_list[0])
+                    index_of_note = 0
                 else:
-                    testNoteExistence = noteList[i][index].index(notes[0])
-                    noteToEdit.append(noteList[i])
-                    indexOfNote = i
+                    test_note_existence = note_list[i][index].index(notes[0])
+                    note_to_edit.append(note_list[i])
+                    index_of_note = i
             except:
                 pass
 
-    deleteWhiteSpace = False
+    delete_white_space = False
 
-    noteToEditAccumulator = []
+    note_to_edit_accumulator = []
 
-    for note in range(len(noteToEdit)):
-        for item in range(len(noteToEdit[note])):
-            if deleteWhiteSpace == False:
-                noteToEditAccumulator.append(noteToEdit[note][item])
-                if '┘' in noteToEdit[note][item]:
-                    deleteWhiteSpace = True
+    for note in range(len(note_to_edit)):
+        for item in range(len(note_to_edit[note])):
+            if not delete_white_space:
+                note_to_edit_accumulator.append(note_to_edit[note][item])
+                if '┘' in note_to_edit[note][item]:
+                    delete_white_space = True
             else:
                 pass
 
-    noteToEdit = []
-    noteToEdit.append(noteToEditAccumulator)
-    noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+    note_to_edit = [note_to_edit_accumulator]
+    note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
 
 
-def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
+def note_edit_view(note_to_edit, google_notes, note_list, index_of_note):
+    """Displays options for editing a note or list depending on the type. Such as deleting the note or editing and
+    checking the items of the list etc...
+    @param note_to_edit: a nested list containing the specific note that is meant to edit in the format: [['note tile'],
+    ['item 1'], ['item 2']]
+    @param google_notes: A gkeepapi object which contains a list of keep objects such as lists and notes.
+    @param note_list: a ragged list of notes with the format: [[['note tile'], ['item 1'], ['item 2']], [['note title'],
+    ['body of note random text etc...']]
+    @param index_of_note: the index of the note that is mean to be edited in the googleNotes list and ragged noteList.
+    """
     os.system('clear')
     print('\033[1;33m')
     print(fig.renderText('keep...'))
     global continuePrintingRow
 
-    NoteGrid.printGrid(noteToEdit, continuePrintingRow)
+    NoteGrid.print_grid(note_to_edit, continuePrintingRow)
     continuePrintingRow = True
 
-    gnote = googleNotes[indexOfNote]
+    gnote = google_notes[index_of_note]
 
-    if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
+    if type(google_notes[index_of_note]) == gkeepapi.node.List:
         choices = [
             'Check the items of this list ✎',
             'Edit the items of this list ✎',
@@ -251,222 +269,221 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
             '⏎ Go Back ⏎'
         ]
 
-    editOptions = [
+    edit_options = [
         {
             'type': 'list',
             'name': 'options',
             'message': 'What would you like to do to this note?',
             'choices': choices
         }]
-    listSelection = prompt(editOptions)
+    list_selection = prompt(edit_options)
 
-
-    # LOOK AT THESE FOR REPEATED CODE (CONVERT TO METHODS)
-    if listSelection.get('options') == 'Delete this note ⌫':
-        noteToDelete = googleNotes[indexOfNote]
-        noteToDelete.delete()
+    if list_selection.get('options') == 'Delete this note ⌫':
+        note_to_delete = google_notes[index_of_note]
+        note_to_delete.delete()
         keep.sync()
-        noteView()
-    elif listSelection.get('options') == 'Edit the title of this note ✎':
-        newTitlePrompt = [
-        {
-            'type': 'input',
-            'name': 'noteTitle',
-            'message': 'What should the title of the note be?',
-        }]
+        note_view()
+    elif list_selection.get('options') == 'Edit the title of this note ✎':
+        new_title_prompt = [
+            {
+                'type': 'input',
+                'name': 'noteTitle',
+                'message': 'What should the title of the note be?',
+            }]
 
-        newTitleAnswer = prompt(newTitlePrompt)
+        new_title_answer = prompt(new_title_prompt)
 
-        newTitle = newTitleAnswer.get('noteTitle')
+        new_title = new_title_answer.get('noteTitle')
 
-        gnote.title = newTitle
+        gnote.title = new_title
 
         keep.sync()
 
-        borderWidth = len(noteToEdit[0][1])
-        noteToEdit[0][1] = newTitle
+        borderWidth = len(note_to_edit[0][1])
+        note_to_edit[0][1] = new_title
 
-        noteToEdit = NoteGrid.removeListBorder(noteToEdit)
+        note_to_edit = NoteGrid.remove_list_border(note_to_edit)
 
-        if type(googleNotes[indexOfNote]) == gkeepapi.node.List:
-            for index in range(len(noteToEdit[0])):
+        if type(google_notes[index_of_note]) == gkeepapi.node.List:
+            for index in range(len(note_to_edit[0])):
                 if index > 0:
-                    noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
+                    note_to_edit[0][index] = '□ ' + note_to_edit[0][index]
 
-        noteToEdit = NoteGrid.addListBorder(noteToEdit)
+        note_to_edit = NoteGrid.add_list_border(note_to_edit)
 
-        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-    elif listSelection.get('options') == 'Edit the body of this note ✎':
+        note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
+    elif list_selection.get('options') == 'Edit the body of this note ✎':
         os.system('touch note')
 
-        noteBodyFile = open('note', "w")
-        textBody = noteBodyFile.write(gnote.text)
-        noteBodyFile.close()
+        note_body_file = open('note', "w")
+        text_body = note_body_file.write(gnote.text)
+        note_body_file.close()
 
         os.system('$EDITOR note')
 
         with open('note', 'r') as file:
-            noteText = file.read()
+            note_text = file.read()
 
         os.system('rm ' + 'note')
 
-        gnote.text = noteText
+        gnote.text = note_text
         keep.sync()
-        noteView()
-    elif listSelection.get('options') == 'Edit the items of this list ✎':
-        itemList = []
-        for index in range(len(noteList[indexOfNote])):
-            #if index > 1 and index < (len(noteList[indexOfNote])-1):
-            if '□' in noteList[indexOfNote][index]:
-                itemList.append(re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' '))
+        note_view()
+    elif list_selection.get('options') == 'Edit the items of this list ✎':
+        item_list = []
+        for index in range(len(note_list[index_of_note])):
+            # if index > 1 and index < (len(noteList[indexOfNote])-1):
+            if '□' in note_list[index_of_note][index]:
+                item_list.append(re.sub("[│]", '', str(note_list[index_of_note][index])).rstrip(' ').lstrip(' '))
 
-        itemList.append('...+ Add Item/s +')
-        itemList.append('...⏎ Go Back ⏎')
+        item_list.append('...+ Add Item/s +')
+        item_list.append('...⏎ Go Back ⏎')
 
-        itemToEdit = [
-        {
-            'type': 'list',
-            'name': 'item',
-            'message': 'Please select a list item to edit:',
-            'choices': itemList
-        }]
+        item_to_edit = [
+            {
+                'type': 'list',
+                'name': 'item',
+                'message': 'Please select a list item to edit:',
+                'choices': item_list
+            }]
 
-        itemToEditAnswer = prompt(itemToEdit)
+        item_to_edit_answer = prompt(item_to_edit)
 
-        if itemToEditAnswer.get('item') == '...+ Add Item/s +':
-            listFinished = False
-            listItems = []
-            while listFinished == False:
+        if item_to_edit_answer.get('item') == '...+ Add Item/s +':
+            list_finished = False
+            list_items = []
+            while not list_finished:
                 addListItem = [
-                {
-                    'type': 'input',
-                    'name': 'listItem',
-                    'message': 'Add a list item (Enter \'-\' to finish):',
-                }]
+                    {
+                        'type': 'input',
+                        'name': 'list_item',
+                        'message': 'Add a list item (Enter \'-\' to finish):',
+                    }]
 
-                listItemAnswer = prompt(addListItem)
+                list_item_answer = prompt(addListItem)
 
-                listItem = (listItemAnswer.get('listItem'), False)
+                list_item = (list_item_answer.get('list_item'), False)
 
-                listItems.append(listItem)
+                list_items.append(list_item)
 
-                if listItemAnswer.get('listItem') == '-':
-                    listItems.pop(len(listItems)-1)
-                    listFinished = True
+                if list_item_answer.get('list_item') == '-':
+                    list_items.pop(len(list_items) - 1)
+                    list_finished = True
 
-            for index in range(len(listItems)):
-                gnote.add(listItems[index][0], listItems[index][1])
+            for index in range(len(list_items)):
+                gnote.add(list_items[index][0], list_items[index][1])
 
             keep.sync()
 
-            noteList = NoteGrid.listifyGoogleNotes(googleNotes)
-            noteList = NoteGrid.addListBorder(noteList)
-            noteToEdit[0] = noteList[indexOfNote]
-            noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+            note_list = NoteGrid.listify_google_notes(google_notes)
+            note_list = NoteGrid.add_list_border(note_list)
+            note_to_edit[0] = note_list[index_of_note]
+            note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
 
-        elif itemToEditAnswer.get('item') == '...⏎ Go Back ⏎':
-            noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
+        elif item_to_edit_answer.get('item') == '...⏎ Go Back ⏎':
+            note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
         else:
-            glistitem = gnote.unchecked[itemList.index(itemToEditAnswer.get('item'))]
+            glistitem = gnote.unchecked[item_list.index(item_to_edit_answer.get('item'))]
 
-            editItemPrompt = [{
-                'type':'input',
-                'name':'itemEdited',
+            edit_item_prompt = [{
+                'type': 'input',
+                'name': 'itemEdited',
                 'message': 'Edit the item (Delete all text to delete item):',
                 'default': glistitem.text
             }]
 
-            editItemAnswer = prompt(editItemPrompt)
+            edit_item_answer = prompt(edit_item_prompt)
 
-            if editItemAnswer.get('itemEdited') != '':
-                glistitem.text = editItemAnswer.get('itemEdited')
+            if edit_item_answer.get('itemEdited') != '':
+                glistitem.text = edit_item_answer.get('itemEdited')
                 keep.sync()
 
-                noteToEdit = NoteGrid.removeListBorder(noteToEdit)
-                for index in range(len(noteToEdit[0])):
+                note_to_edit = NoteGrid.remove_list_border(note_to_edit)
+                for index in range(len(note_to_edit[0])):
                     if index > 0:
-                        noteToEdit[0][index] = '□ ' + noteToEdit[0][index]
-                noteToEdit[0][(itemList.index(itemToEditAnswer.get('item')))+1] = '□ ' + editItemAnswer.get('itemEdited')
-                noteToEdit = NoteGrid.addListBorder(noteToEdit)
-                noteList[indexOfNote] = noteToEdit[0]
+                        note_to_edit[0][index] = '□ ' + note_to_edit[0][index]
+                note_to_edit[0][(item_list.index(item_to_edit_answer.get('item'))) + 1] = '□ ' + edit_item_answer.get(
+                    'itemEdited')
+                note_to_edit = NoteGrid.add_list_border(note_to_edit)
+                note_list[index_of_note] = note_to_edit[0]
             else:
                 # Add delete item
                 pass
 
-        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-    elif listSelection.get('options') == 'Check the items of this list ✎':
+        note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
+    elif list_selection.get('options') == 'Check the items of this list ✎':
         # Select list item to edit ==> options: check or uncheck, edit item
-        itemList = []
-        itemChoices = []
-        for index in range(len(noteList[indexOfNote])):
-            if '□' in noteList[indexOfNote][index]:
-                itemString = re.sub("[│]", '', str(noteList[indexOfNote][index])).rstrip(' ').lstrip(' ')
-                itemDict = dict.fromkeys([itemString], 'name')
-                itemDictInverted = dict(map(reversed, itemDict.items()))
-                itemChoices.append(itemDictInverted)
+        item_list = []
+        item_choices = []
+        for index in range(len(note_list[index_of_note])):
+            if '□' in note_list[index_of_note][index]:
+                item_string = re.sub("[│]", '', str(note_list[index_of_note][index])).rstrip(' ').lstrip(' ')
+                item_dict = dict.fromkeys([item_string], 'name')
+                item_dict_inverted = dict(map(reversed, item_dict.items()))
+                item_choices.append(item_dict_inverted)
 
         listItemsPrompt = [
-        {
-            'type': 'checkbox',
-            'name': 'options',
-            'message': 'Please pick a item to edit:',
-            'choices': itemChoices
-        }]
+            {
+                'type': 'checkbox',
+                'name': 'options',
+                'message': 'Please pick a item to edit:',
+                'choices': item_choices
+            }]
 
-        listItemsSelection = prompt(listItemsPrompt)
+        list_items_selection = prompt(listItemsPrompt)
 
-        checkedItems = listItemsSelection.get('options')
+        checked_items = list_items_selection.get('options')
 
-        for index in range(len(checkedItems)):
-            checkedItems[index] = re.sub("[□]", '', str(checkedItems[index])).rstrip(' ').lstrip(' ')
-        noteToEdit = NoteGrid.removeListBorder(noteToEdit)
-        for index in range(len(checkedItems)):
+        for index in range(len(checked_items)):
+            checked_items[index] = re.sub("[□]", '', str(checked_items[index])).rstrip(' ').lstrip(' ')
+        note_to_edit = NoteGrid.remove_list_border(note_to_edit)
+        for index in range(len(checked_items)):
             try:
-                noteToEdit[0].index(checkedItems[index])
-                googleList = gnote.unchecked
-                googleList[index].checked = True
+                note_to_edit[0].index(checked_items[index])
+                google_list = gnote.unchecked
+                google_list[index].checked = True
                 keep.sync()
             except:
                 pass
-        googleNotes = keep.all()
-        noteList = NoteGrid.listifyGoogleNotes(googleNotes)
-        noteList = NoteGrid.addListBorder(noteList)
-        noteToEdit[0] = noteList[indexOfNote]
-        noteEditView(noteToEdit, googleNotes, noteList, indexOfNote)
-    elif listSelection.get('options') == '⏎ Go Back ⏎':
-        editNoteSelectorView(noteList, googleNotes)
+        google_notes = keep.all()
+        note_list = NoteGrid.listify_google_notes(google_notes)
+        note_list = NoteGrid.add_list_border(note_list)
+        note_to_edit[0] = note_list[index_of_note]
+        note_edit_view(note_to_edit, google_notes, note_list, index_of_note)
+    elif list_selection.get('options') == '⏎ Go Back ⏎':
+        edit_note_selector_view(note_list, google_notes)
 
 
 def login():
     """Prompts the user to login and logs them in."""
     print('\033[21;93m')
     print('Please Login: \n \n')
-    usernamePrompt = [
-    {
-        'type': 'input',
-        'name': 'username',
-        'message': 'Please enter your username:',
-    }]
-    usernameCredentials = prompt(usernamePrompt)
+    username_prompt = [
+        {
+            'type': 'input',
+            'name': 'username',
+            'message': 'Please enter your username:',
+        }]
+    username_credentials = prompt(username_prompt)
 
-    username = usernameCredentials['username']
+    username = username_credentials['username']
     password = keyring.get_password('google-keep', username)
 
     if isinstance(password, type(None)):
-        passwordCredentials = [
-        {
-            'type': 'password',
-            'name': 'password',
-            'message': 'Please enter your password:',
-        },
-        {
-            'type': 'confirm',
-            'name': 'confirm-save',
-            'message': 'Would you like your password to be saved?'
-        }]
+        password_credentials = [
+            {
+                'type': 'password',
+                'name': 'password',
+                'message': 'Please enter your password:',
+            },
+            {
+                'type': 'confirm',
+                'name': 'confirm-save',
+                'message': 'Would you like your password to be saved?'
+            }]
 
-        passwordCredentials = prompt(passwordCredentials)
-        password = passwordCredentials['password']
+        password_credentials = prompt(password_credentials)
+        password = password_credentials['password']
 
         try:
             keep.login(username, password)
@@ -475,20 +492,20 @@ def login():
             print("Your login credentials were incorrect!\n")
             return
 
-        if passwordCredentials['confirm-save'] == True:
+        if password_credentials['confirm-save']:
             keyring.set_password('google-keep', username, password)
     else:
         keep.login(username, password)
 
 
-def animateWelcomeText():
+def animate_welcome_text():
     """Animates the welcome keepd text in ASCII font and welcome paragraph."""
 
-    welcomeText = 'keepd...'
+    welcome_text = 'keepd...'
 
     text = ''
 
-    for character in welcomeText:
+    for character in welcome_text:
         os.system('clear')
         text += character
         print('\033[1;33m')
@@ -497,17 +514,21 @@ def animateWelcomeText():
 
     print('\n')
 
-    paragraphText = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/keep-cli. In addition, not all features from the true Google Keep are included. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
+    paragraph_text = 'Hello! This is a terminal based Google Keep Program. It is still in development so feel free to ' \
+                     'leave comments or suggestions on the github page: https://github.com/zack-ashen/keep-cli. In ' \
+                     'addition, not all features from the true Google Keep are included. However, if there is ' \
+                     'something you want to see feel free to make a request on github or email: ' \
+                     'zachary.h.a@gmail.com. Thanks! \n '
 
-    paragraphStrings = []
+    paragraph_strings = []
 
     if width < 100:
-        print(paragraphText)
+        print(paragraph_text)
     else:
-        paragraphText = str(fill(paragraphText, width/2))
-        paragraphTextList = paragraphText.split('\n')
-        for index in range(len(paragraphTextList)):
-            print(paragraphTextList[index].center(width))
+        paragraph_text = str(fill(paragraph_text, width / 2))
+        paragraph_text_list = paragraph_text.split('\n')
+        for index in range(len(paragraph_text_list)):
+            print(paragraph_text_list[index].center(width))
         print('\n')
 
         line = ''
@@ -516,8 +537,14 @@ def animateWelcomeText():
         print(line)
 
 
-def parseArguments():
-    parser = argparse.ArgumentParser(description='keep-cli is a command line version of Google Keep. You can add, view, edit and delete notes.')
+def parse_arguments():
+    """Parses arguments and calls the subsequent methods.
+        --list: Creates a new list
+        --note: Creates a new note
+        --quick: skips the intro animation
+    """
+    parser = argparse.ArgumentParser(description='keep-cli is a command line version of Google Keep. You can add, '
+                                                 'view, edit and delete notes.')
 
     parser.add_argument('--quick', help='Skips the intro animation and gets directly to login.', action='store_true')
     parser.add_argument('--note', help='Make a note...', action='store_true')
@@ -526,25 +553,25 @@ def parseArguments():
 
     if args.quick:
         login()
-        noteView()
+        note_view()
     elif not args.quick and not args.note and not args.list:
-        animateWelcomeText()
+        animate_welcome_text()
         login()
-        noteView()
+        note_view()
     if args.note:
         login()
-        googleNotes = keep.all()
-        noteList = [[]]
-        makeANote(noteList, False)
+        google_notes = keep.all()
+        note_list = [[]]
+        make_a_note(note_list, False)
 
     elif args.list:
-        googleNotes = keep.all()
-        noteList = [[]]
-        makeAList(noteList, False)
+        google_notes = keep.all()
+        note_list = [[]]
+        make_a_list(note_list, False)
 
 
 def main():
-    parseArguments()
+    parse_arguments()
 
 
 if __name__ == '__main__':

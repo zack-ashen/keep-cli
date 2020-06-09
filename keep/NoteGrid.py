@@ -17,7 +17,8 @@ width = columns
 
 columnEndPos = 0
 
-def listifyGoogleNotes(googleNotes):
+
+def listify_google_notes(google_notes):
     """Returns: a nested list from a Google Note object. Checked items are removed from the list.
 
     Example: Google Note object with list titled 'Foo List' and items:
@@ -29,147 +30,146 @@ def listifyGoogleNotes(googleNotes):
     Precondition: googleNote is a list containing either items of type
     'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
 
-
     # This is the list accumulator that recieves the parsed Google Notes
-    noteList = []
+    note_list = []
 
-    for index in range(len(googleNotes)):
+    for index in range(len(google_notes)):
         # execute if note is a list
-        if type(googleNotes[index]) == gkeepapi.node.List:
+        if type(google_notes[index]) == gkeepapi.node.List:
             # Only retrieve unchecked list items
-            uncheckedList = googleNotes[index].unchecked
-            noteTitle = googleNotes[index].title
+            unchecked_list = google_notes[index].unchecked
+            note_title = google_notes[index].title
             # get the string text of the list and change the list item to the string
-            for i in range(len(uncheckedList)):
-                uncheckedList[i] = '□  ' + uncheckedList[i].text
-            noteList.append(uncheckedList)
-            uncheckedList.insert(0, noteTitle)
+            for i in range(len(unchecked_list)):
+                unchecked_list[i] = '□  ' + unchecked_list[i].text
+            note_list.append(unchecked_list)
+            unchecked_list.insert(0, note_title)
         # execute of note is a note
         else:
-            note = googleNotes[index]
-            noteTitle = note.title
+            note = google_notes[index]
+            note_title = note.title
             note = note.text.split('\n')
-            noteList.append(note)
-            note.insert(0, noteTitle)
-    return noteList
+            note_list.append(note)
+            note.insert(0, note_title)
+    return note_list
 
 
-def wrapText(nestedList):
-    for index in range(len(nestedList)):
-        for i in range(len(nestedList[index])):
-            if len(nestedList[index][i]) > (width-25):
+def wrap_text(nested_list):
+    for index in range(len(nested_list)):
+        for i in range(len(nested_list[index])):
+            if len(nested_list[index][i]) > (width - 25):
 
-                nestedList[index][i] = fill(nestedList[index][i], width=(width-22))
+                nested_list[index][i] = fill(nested_list[index][i], width=(width - 22))
 
-                unwrappedText = nestedList[index][i]
+                unwrapped_text = nested_list[index][i]
 
-                #nestedList[index][i][width-30:width-20].split(' ')
-                wrappedTextList = nestedList[index][i].split('\n')
-                #print(wrappedTextList)
-                for a in range(len(wrappedTextList)):
-                    nestedList[index].insert(i+(a), wrappedTextList[a])
-                nestedList[index].remove(str(unwrappedText))
+                # nestedList[index][i][width-30:width-20].split(' ')
+                wrapped_text_list = nested_list[index][i].split('\n')
+                # print(wrapped_text_list)
+                for a in range(len(wrapped_text_list)):
+                    nested_list[index].insert(i + (a), wrapped_text_list[a])
+                nested_list[index].remove(str(unwrapped_text))
 
-    return nestedList
+    return nested_list
 
 
-def addListBorder(nestedList):
+def add_list_border(nested_list):
     """Returns: a ragged list with ASCII borders. The nested lists will have borders.
     Precondition: list is a nested list and all items in the nested list are strings"""
-    for index in range(len(nestedList)):
-        listItem = nestedList[index]
-        borderWidth = max(len(s) for s in listItem)
+    for index in range(len(nested_list)):
+        list_item = nested_list[index]
+        border_width = max(len(s) for s in list_item)
 
         # add top border
-        topBorder = ['┌' + '─' * borderWidth + '┐']
-        topBorder = re.sub("['',]", '', str(topBorder)).strip('[]')
-        nestedList[index].insert(0, topBorder)
+        top_border = ['┌' + '─' * border_width + '┐']
+        top_border = re.sub("['',]", '', str(top_border)).strip('[]')
+        nested_list[index].insert(0, top_border)
 
         # iterate over middle lines and add border there
-        for i in range(len(listItem)):
+        for i in range(len(list_item)):
             if i == 1:
-                listItem[i] = '│' + (' ' * ((borderWidth-len(listItem[i]))//2)) + (listItem[i] + ' ' * ((1+borderWidth-len(listItem[i]))//2))[:borderWidth] + '│'
+                list_item[i] = '│' + (' ' * ((border_width - len(list_item[i])) // 2)) + (list_item[i] + ' ' * (
+                            (1 + border_width - len(list_item[i])) // 2))[:border_width] + '│'
             elif i >= 2:
-                listItem[i] = '│' + (listItem[i] + ' ' * borderWidth)[:borderWidth] + '│'
+                list_item[i] = '│' + (list_item[i] + ' ' * border_width)[:border_width] + '│'
 
         # add bottom border
-        bottomBorder = ['└' + '─' * borderWidth + '┘']
-        bottomBorder = re.sub("['',]", '', str(bottomBorder)).strip('[]')
-        nestedList[index].append(bottomBorder)
-    return nestedList
+        bottom_border = ['└' + '─' * border_width + '┘']
+        bottom_border = re.sub("['',]", '', str(bottom_border)).strip('[]')
+        nested_list[index].append(bottom_border)
+    return nested_list
 
 
-def removeListBorder(nestedList):
-    for index in range(len(nestedList)):
-        nestedList[index].pop(0)
-        nestedList[index].pop(len(nestedList[index])-1)
+def remove_list_border(nested_list):
+    for index in range(len(nested_list)):
+        nested_list[index].pop(0)
+        nested_list[index].pop(len(nested_list[index]) - 1)
 
-    for index in range(len(nestedList)):
-        for i in range(len(nestedList[index])):
-            nestedList[index][i] = re.sub("[│□]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
-    return nestedList
+    for index in range(len(nested_list)):
+        for i in range(len(nested_list[index])):
+            nested_list[index][i] = re.sub("[│□]", '', str(nested_list[index][i])).rstrip(' ').lstrip(' ')
+    return nested_list
 
 
-def printGrid(nestedList, continuePrintingRow, startPos=0):
-    maxNestedListLength = max(len(i) for i in nestedList)
-    nestedListItemWidthAccumulator = 0
-    foundColumnCount = False
+def print_grid(nested_list, continue_printing_row, start_pos=0):
+    max_nested_list_length = max(len(i) for i in nested_list)
+    nested_list_item_width_accumulator = 0
+    found_column_count = False
 
     global columnEndPos
 
-    rowPosition = range(len(nestedList))
+    row_position = range(len(nested_list))
 
     # ------ Find columnEndPos ------
-    for index in rowPosition[startPos:]:
-        nestedListItem = nestedList[index]
+    for index in row_position[start_pos:]:
+        nested_list_item = nested_list[index]
 
-        noteWidth = max(len(s) for s in nestedListItem)
-        nestedListItemWidthAccumulator += noteWidth
-        if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
-            columnEndPos = (nestedList.index(nestedList[index-1]))
-            foundColumnCount = True
-        elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
-            columnEndPos = len(nestedList)
-            #return
-            continuePrintingRow = False
-            foundColumnCount = True
+        note_width = max(len(s) for s in nested_list_item)
+        nested_list_item_width_accumulator += note_width
+        if nested_list_item_width_accumulator > (width - 20) and not found_column_count:
+            columnEndPos = (nested_list.index(nested_list[index - 1]))
+            found_column_count = True
+        elif index == max(row_position[start_pos:]) and not found_column_count and nested_list_item_width_accumulator < width:
+            columnEndPos = len(nested_list)
+            # return
+            continue_printing_row = False
+            found_column_count = True
     # ------ End Find columnEndPos ------
 
     # ------ Add spaces below note to make rectangular row of characters ------
-    if columnEndPos == startPos:
-        maxNestedListLength = len(nestedList[columnEndPos])
-    elif columnEndPos == len(nestedList):
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos])
+    if columnEndPos == start_pos:
+        max_nested_list_length = len(nested_list[columnEndPos])
+    elif columnEndPos == len(nested_list):
+        max_nested_list_length = max(len(i) for i in nested_list[start_pos:columnEndPos])
     else:
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos+1])
+        max_nested_list_length = max(len(i) for i in nested_list[start_pos:columnEndPos + 1])
 
-    for index in rowPosition[startPos:columnEndPos+1]:
-        nestedListItem = nestedList[index]
-        noteWidth = max(len(s) for s in nestedListItem)
-        for i in range(len(nestedListItem)):
-            if len(nestedListItem) < maxNestedListLength:
-                for x in range(maxNestedListLength-len(nestedListItem)):
-                    nestedListItem.append(' ' * noteWidth)
+    for index in row_position[start_pos:columnEndPos + 1]:
+        nested_list_item = nested_list[index]
+        note_width = max(len(s) for s in nested_list_item)
+        for i in range(len(nested_list_item)):
+            if len(nested_list_item) < max_nested_list_length:
+                for x in range(max_nested_list_length - len(nested_list_item)):
+                    nested_list_item.append(' ' * note_width)
     # ------ End add spaces below note to make rectangular row of characters ------
 
-
-    if (columnEndPos+1) == startPos:
-        nestedListFormatted = nestedList[columnEndPos+1]
+    if (columnEndPos + 1) == start_pos:
+        nested_list_formatted = nested_list[columnEndPos + 1]
     else:
-        nestedListRow = nestedList[startPos:columnEndPos+1]
+        nested_list_row = nested_list[start_pos:columnEndPos + 1]
 
-        nestedListFormatted = zip(*nestedListRow)
+        nested_list_formatted = zip(*nested_list_row)
 
-        nestedListFormatted = list(nestedListFormatted)
+        nested_list_formatted = list(nested_list_formatted)
 
     # ------ Center Notes ------
-    centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
+    center_space_count = round(abs((width - len(''.join(nested_list_formatted[0]))) / 2))
 
-    for i in range(len(nestedListFormatted)):
+    for i in range(len(nested_list_formatted)):
         print('\u001b[0;33m', end='')
         if i == 1:
             print('\u001b[1;33m', end='')
-        stringLine = ''.join(nestedListFormatted[i])
-        print((centerSpaceCount * ' '), stringLine)
-    if continuePrintingRow:
-        printGrid(nestedList, continuePrintingRow, columnEndPos+1)
+        string_line = ''.join(nested_list_formatted[i])
+        print((center_space_count * ' '), string_line)
+    if continue_printing_row:
+        print_grid(nested_list, continue_printing_row, columnEndPos + 1)
