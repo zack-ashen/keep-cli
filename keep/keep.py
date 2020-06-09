@@ -63,7 +63,7 @@ def noteView():
         noteList = NoteGrid.listifyGoogleNotes(googleNotes)
         noteList = NoteGrid.wrapText(noteList)
         noteList = NoteGrid.addListBorder(noteList)
-        NoteGrid.printGrid(noteList)
+        NoteGrid.printGrid(noteList, continuePrintingRow)
         print('\n')
         continuePrintingRow = True
         choices =  [
@@ -228,10 +228,9 @@ def noteEditView(noteToEdit, googleNotes, noteList, indexOfNote):
     os.system('clear')
     print('\033[1;33m')
     print(fig.renderText('keep...'))
-
-    NoteGrid.printGrid(noteToEdit)
-
     global continuePrintingRow
+
+    NoteGrid.printGrid(noteToEdit, continuePrintingRow)
     continuePrintingRow = True
 
     gnote = googleNotes[indexOfNote]
