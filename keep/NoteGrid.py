@@ -15,6 +15,8 @@ import gkeepapi
 columns, rows = os.get_terminal_size()
 width = columns
 
+columnEndPos = 0
+
 def listifyGoogleNotes(googleNotes):
     """Returns: a nested list from a Google Note object. Checked items are removed from the list.
 
@@ -108,13 +110,12 @@ def removeListBorder(nestedList):
     return nestedList
 
 
-def printGrid(nestedList, startPos=0):
+def printGrid(nestedList, continuePrintingRow, startPos=0):
     maxNestedListLength = max(len(i) for i in nestedList)
     nestedListItemWidthAccumulator = 0
     foundColumnCount = False
 
     global columnEndPos
-    global continuePrintingRow
 
     rowPosition = range(len(nestedList))
 
@@ -129,6 +130,7 @@ def printGrid(nestedList, startPos=0):
             foundColumnCount = True
         elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
             columnEndPos = len(nestedList)
+            #return
             continuePrintingRow = False
             foundColumnCount = True
     # ------ End Find columnEndPos ------
@@ -169,6 +171,5 @@ def printGrid(nestedList, startPos=0):
             print('\u001b[1;33m', end='')
         stringLine = ''.join(nestedListFormatted[i])
         print((centerSpaceCount * ' '), stringLine)
-
-    while continuePrintingRow:
-        printGrid(nestedList, columnEndPos+1)
+    if continuePrintingRow:
+        printGrid(nestedList, continuePrintingRow, columnEndPos+1)
