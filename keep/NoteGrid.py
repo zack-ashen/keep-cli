@@ -32,7 +32,6 @@ def listify_google_notes(google_notes):
 
     # This is the list accumulator that recieves the parsed Google Notes
     note_list = []
-
     for index in range(len(google_notes)):
         # execute if note is a list
         if type(google_notes[index]) == gkeepapi.node.List:

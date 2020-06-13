@@ -353,14 +353,14 @@ def note_edit_view(note_to_edit, google_notes, note_list, index_of_note):
             list_finished = False
             list_items = []
             while not list_finished:
-                addListItem = [
+                add_list_item = [
                     {
                         'type': 'input',
                         'name': 'list_item',
                         'message': 'Add a list item (Enter \'-\' to finish):',
                     }]
 
-                list_item_answer = prompt(addListItem)
+                list_item_answer = prompt(add_list_item)
 
                 list_item = (list_item_answer.get('list_item'), False)
 
