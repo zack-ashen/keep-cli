@@ -20,9 +20,9 @@ setup(
     description='Keep-cli is a cli Google Keep client. You can add, delete, and manage your Google Keep notes.',
     url='https://github.com/zack-ashen/keep-cli',
     long_description=open('README-pip.md').read(),
-    long_description_content_type ="text/markdown",
+    long_description_content_type="text/markdown",
     install_requires=install_requirements,
-    python_requires=">=3.7",
+    python_requires='>=3.7',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
